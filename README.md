@@ -33,6 +33,19 @@ ELEVENLABS_API_KEY=...
 	4) Deploy; API health at `/health`. Worker should connect to Redis automatically.
 	5) Set `NEXT_PUBLIC_API_BASE` for frontend if hosting separately.
 
+	### Free plan note: background worker
+
+	Render's free plan doesn't allow a dedicated Worker service. The blueprint runs the RQ worker inside the web service:
+
+	- Web start command starts the worker in the background, then Uvicorn.
+	- Controlled via env var `RUN_WORKER=1` (already set in `render.yaml`).
+
+	When you upgrade and want a separate worker:
+
+	1) Set `RUN_WORKER=0` (or remove it) on the web service.
+	2) Add a Worker service back into `render.yaml` and resync the blueprint.
+	3) Scale web and worker independently as needed.
+
 ## Local API
 - python -m pip install -r backend/requirements.txt
 - python -c "from backend.db.seed_data import init_db; init_db()"
