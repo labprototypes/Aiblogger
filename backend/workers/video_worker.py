@@ -11,7 +11,11 @@ def process_video(task_id: int, prompt: str | None = None):
         task = s.query(models.ContentTask).get(task_id)
         if not task:
             return False
-        url = generate_video(prompt or task.idea or "video")
+    # Simple preset selection based on blogger type
+    btype = (task.blogger.type if task.blogger else "").lower() if task else ""
+    mode = "seedream/edit" if "fashion" in btype else "infinitalk"
+    combined_prompt = f"[{mode}] {prompt or task.idea or 'video'}"
+    url = generate_video(combined_prompt)
         if os.getenv("AWS_S3_BUCKET") and os.getenv("AWS_ACCESS_KEY_ID") and os.getenv("AWS_SECRET_ACCESS_KEY"):
             key = f"previews/task-{task_id}.mp4"
             try:

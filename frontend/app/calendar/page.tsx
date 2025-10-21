@@ -55,7 +55,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           <a href={mkLink(prev, bloggerId)} className="pill text-sm">←</a>
           <h1 className="text-2xl font-semibold">Календарь — {monthLabel}</h1>
           <a href={mkLink(next, bloggerId)} className="pill text-sm">→</a>
-        </div>
+  </div>
   <div className="flex items-center gap-3">
           <form>
             <select
@@ -79,6 +79,18 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           </form>
           <div className="text-sm text-gray-400">Всего задач: {tasks.length}</div>
           <Controls />
+          <form
+            action={async () => {
+              'use server'
+              if (!bloggerId && bloggers[0]?.id) {
+                await api.tasks.autoPlan(bloggers[0].id, shown.getFullYear(), shown.getMonth() + 1);
+              } else if (bloggerId) {
+                await api.tasks.autoPlan(bloggerId, shown.getFullYear(), shown.getMonth() + 1);
+              }
+            }}
+          >
+            <button className="pill">Автоплан</button>
+          </form>
         </div>
       </div>
       <div className="grid grid-cols-7 gap-2">

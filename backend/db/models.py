@@ -34,3 +34,21 @@ class ContentTask(Base):
     preview_url = Column(String(1024))
 
     blogger = relationship("Blogger", back_populates="tasks")
+
+
+class TaskMeta(Base):
+    __tablename__ = "task_meta"
+
+    id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey("content_tasks.id"), nullable=False, index=True)
+    # style/outfit/location/weather or other recommendations
+    data = Column(JSON)
+
+
+class TaskVersion(Base):
+    __tablename__ = "task_versions"
+
+    id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey("content_tasks.id"), nullable=False, index=True)
+    kind = Column(String(50), default="script")
+    content = Column(Text)
