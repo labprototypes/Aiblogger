@@ -16,6 +16,11 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
     await api.tasks.generate(taskId);
   }
 
+  async function generateScript() {
+    'use server'
+    await api.tasks.generateScript(taskId);
+  }
+
   async function remove() {
     'use server'
     await api.tasks.delete(taskId);
@@ -58,6 +63,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
         </form>
         <form action={generate}>
           <button type="submit" className="pill">Generate</button>
+        </form>
+        <form action={generateScript}>
+          <button type="submit" className="pill">Gen Script</button>
         </form>
       </div>
       <a className="text-sm text-gray-400" href="/calendar">← Назад в календарь</a>

@@ -7,6 +7,7 @@ from ..db.connection import get_db
 from ..db import models
 from ..utils.queue import enqueue
 from ..workers.image_worker import process_image
+from ..utils.openai_chat import generate_text
 
 
 class TaskCreate(BaseModel):
@@ -83,6 +84,20 @@ def trigger_generation(task_id: int, db: Session = Depends(get_db)):
     task.status = "SCRIPT_READY"  # enqueued for visual generation
     db.commit()
     return {"queued": True, "task_id": task.id, "job_id": job_id}
+
+
+@router.post("/{task_id}/script")
+def generate_script(task_id: int, db: Session = Depends(get_db)):
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    prompt = task.idea or f"Create a short content script for {task.content_type} on {task.date}"
+    script = generate_text(prompt)
+    task.script = script
+    task.status = "SCRIPT_READY"
+    db.commit()
+    db.refresh(task)
+    return {"ok": True, "task_id": task.id, "status": task.status}
 
 
 @router.delete("/{task_id}")

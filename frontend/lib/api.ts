@@ -67,6 +67,7 @@ export const api = {
     updateStatus: (task_id: number, status: string) =>
       request<Task>(`/api/tasks/${task_id}`, { method: "PUT", body: JSON.stringify({ status }) }),
     generate: (task_id: number) => request<{ queued: boolean; task_id: number; job_id: string }>(`/api/tasks/${task_id}/generate`, { method: "POST" }),
+  generateScript: (task_id: number) => request<{ ok: boolean; task_id: number; status: string }>(`/api/tasks/${task_id}/script`, { method: "POST" }),
   delete: (task_id: number) => request<{ ok: boolean }>(`/api/tasks/${task_id}`, { method: "DELETE" }),
   },
 };
