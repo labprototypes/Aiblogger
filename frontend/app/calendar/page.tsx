@@ -89,8 +89,19 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
               </div>
               <div className="space-y-1">
                 {items.slice(0, 3).map((t) => (
-                  <div key={t.id} className={`text-[11px] px-2 py-1 rounded ${statusColors[t.status] || "bg-gray-700 text-gray-200"}`}>
-                    {t.content_type} — {t.status}
+                  <div key={t.id} className="flex items-center gap-2">
+                    <a href={`/tasks/${t.id}`} className={`text-[11px] px-2 py-1 rounded ${statusColors[t.status] || "bg-gray-700 text-gray-200"}`}>
+                      {t.content_type} — {t.status}
+                    </a>
+                    <form
+                      action={async (formData: FormData) => {
+                        'use server'
+                        const next = nextStatus(t.status);
+                        await api.tasks.updateStatus(t.id, next);
+                      }}
+                    >
+                      <button type="submit" className="text-[10px] text-gray-400 hover:text-white">⟳</button>
+                    </form>
                   </div>
                 ))}
                 {items.length > 3 && (
@@ -137,4 +148,10 @@ function QuickAdd({ date, bloggers, bloggerId }: { date: string; bloggers: Await
       <button type="submit" className="pill text-xs">Добавить</button>
     </form>
   );
+}
+
+function nextStatus(cur: string) {
+  const order = ["DRAFT", "PLANNED", "SCRIPT_READY", "VISUAL_READY", "APPROVED"] as const;
+  const i = order.indexOf(cur as any);
+  return order[(i + 1) % order.length];
 }

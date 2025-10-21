@@ -46,6 +46,14 @@ def list_tasks(blogger_id: Optional[int] = None, db: Session = Depends(get_db)):
     return q.order_by(models.ContentTask.date.asc()).all()
 
 
+@router.get("/{task_id}", response_model=TaskOut)
+def get_task(task_id: int, db: Session = Depends(get_db)):
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+
 @router.post("/", response_model=TaskOut)
 def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
     task = models.ContentTask(**payload.model_dump())

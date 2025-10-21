@@ -5,6 +5,10 @@ import { api } from "../../../lib/api";
 export default function EditForm({ id }: { id: number }) {
   const [name, setName] = useState("");
   const [type, setType] = useState("");
+  const [image, setImage] = useState("");
+  const [theme, setTheme] = useState("");
+  const [tone, setTone] = useState("");
+  const [voiceId, setVoiceId] = useState("");
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -15,8 +19,12 @@ export default function EditForm({ id }: { id: number }) {
       try {
         const b = await api.bloggers.get(id);
         if (!alive) return;
-        setName(b.name);
-        setType(b.type);
+  setName(b.name);
+  setType(b.type);
+  setImage(b.image || "");
+  setTheme((b as any).theme || "");
+  setTone((b as any).tone_of_voice || "");
+  setVoiceId((b as any).voice_id || "");
       } catch (e) {
         setError("Не удалось загрузить блогера");
       } finally {
@@ -73,6 +81,24 @@ export default function EditForm({ id }: { id: number }) {
           {pending ? "Сохранение…" : "Сохранить"}
         </button>
         <a href="/bloggers" className="btn">Отмена</a>
+      </div>
+      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Аватар URL</label>
+          <input value={image} onChange={(e) => setImage(e.target.value)} className="input" placeholder="https://..." />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Тема</label>
+          <input value={theme} onChange={(e) => setTheme(e.target.value)} className="input" placeholder="тематика" />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-sm text-gray-400 mb-1">Тональность</label>
+          <textarea value={tone} onChange={(e) => setTone(e.target.value)} className="input min-h-[100px]" placeholder="короткое описание голоса" />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Voice ID</label>
+          <input value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className="input" placeholder="11Labs voice id" />
+        </div>
       </div>
     </form>
   );

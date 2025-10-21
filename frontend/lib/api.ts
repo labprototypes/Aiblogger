@@ -44,6 +44,7 @@ export const api = {
   tasks: {
     list: (opts?: { blogger_id?: number }) =>
       request<Task[]>(`/api/tasks${opts?.blogger_id ? `?blogger_id=${opts.blogger_id}` : ""}`),
+    get: (id: number) => request<Task>(`/api/tasks/${id}`),
     create: (data: { blogger_id: number; date: string; content_type: string; idea?: string; status?: string }) =>
       request<Task>("/api/tasks", { method: "POST", body: JSON.stringify(data) }),
     updateStatus: (task_id: number, status: string) =>
@@ -51,3 +52,11 @@ export const api = {
     generate: (task_id: number) => request<{ queued: boolean; task_id: number; job_id: string }>(`/api/tasks/${task_id}/generate`, { method: "POST" }),
   },
 };
+
+export const TASK_STATUSES = [
+  "DRAFT",
+  "PLANNED",
+  "SCRIPT_READY",
+  "VISUAL_READY",
+  "APPROVED",
+] as const;
