@@ -82,6 +82,19 @@ services:
     plan: free
     ipAllowList: []
     maxmemoryPolicy: noeviction
+  - type: web
+    name: aiblogger-frontend
+    env: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NEXT_PUBLIC_API_BASE
+        fromService:
+          name: aiblogger-api
+          type: web
+          property: host
 
 databases:
   - name: aiblogger-db
