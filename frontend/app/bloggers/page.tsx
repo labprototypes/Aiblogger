@@ -16,17 +16,36 @@ export default async function BloggersPage() {
         ) : (
           <ul className="divide-y divide-white/10">
             {bloggers.map((b) => (
-              <li key={b.id} className="py-3 flex items-center justify-between">
-                <div>
-                  <div className="font-medium">{b.name}</div>
-                  <div className="text-sm text-gray-400">{b.type}</div>
-                </div>
-                <a className="text-accent hover:underline" href={`#`}>Открыть</a>
-              </li>
+              <BloggerRow key={b.id} id={b.id} name={b.name} type={b.type} />
             ))}
           </ul>
         )}
       </div>
     </main>
+  );
+}
+
+function BloggerRow({ id, name, type }: { id: number; name: string; type: string }) {
+  return (
+    <li className="py-3 flex items-center justify-between">
+      <div>
+        <div className="font-medium">{name}</div>
+        <div className="text-sm text-gray-400">{type}</div>
+      </div>
+      <DeleteButton id={id} />
+    </li>
+  );
+}
+
+function DeleteButton({ id }: { id: number }) {
+  return (
+    <form
+      action={async () => {
+        'use server'
+        await api.bloggers.delete(id);
+      }}
+    >
+      <button className="text-red-400 hover:text-red-300" type="submit">Удалить</button>
+    </form>
   );
 }

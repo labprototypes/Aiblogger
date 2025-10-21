@@ -25,5 +25,6 @@ export const api = {
     list: () => request<Blogger[]>("/api/bloggers/"),
     create: (data: { name: string; type: string }) =>
       request<Blogger>("/api/bloggers/", { method: "POST", body: JSON.stringify(data) }),
+  delete: (id: number) => request<{ ok: boolean }>(`/api/bloggers/${id}`, { method: "DELETE" }),
   },
 };
