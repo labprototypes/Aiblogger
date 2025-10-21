@@ -20,6 +20,17 @@ export type Blogger = {
   image?: string | null;
 };
 
+export type Task = {
+  id: number;
+  blogger_id: number;
+  date: string; // YYYY-MM-DD
+  content_type: string;
+  idea?: string | null;
+  status: string;
+  script?: string | null;
+  preview_url?: string | null;
+};
+
 export const api = {
   bloggers: {
     list: () => request<Blogger[]>("/api/bloggers/"),
@@ -29,5 +40,14 @@ export const api = {
     update: (id: number, data: { name: string; type: string }) =>
       request<Blogger>(`/api/bloggers/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (id: number) => request<{ ok: boolean }>(`/api/bloggers/${id}`, { method: "DELETE" }),
+  },
+  tasks: {
+    list: (opts?: { blogger_id?: number }) =>
+      request<Task[]>(`/api/tasks${opts?.blogger_id ? `?blogger_id=${opts.blogger_id}` : ""}`),
+    create: (data: { blogger_id: number; date: string; content_type: string; idea?: string; status?: string }) =>
+      request<Task>("/api/tasks", { method: "POST", body: JSON.stringify(data) }),
+    updateStatus: (task_id: number, status: string) =>
+      request<Task>(`/api/tasks/${task_id}`, { method: "PUT", body: JSON.stringify({ status }) }),
+    generate: (task_id: number) => request<{ queued: boolean; task_id: number; job_id: string }>(`/api/tasks/${task_id}/generate`, { method: "POST" }),
   },
 };
