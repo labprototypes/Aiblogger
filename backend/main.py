@@ -39,10 +39,10 @@ def health():
 def root():
     # If FRONTEND_URL (full) or FRONTEND_HOST is set, redirect there; otherwise show API docs
     fe = os.getenv("FRONTEND_URL")
-    if not fe:
+    # Only trust FRONTEND_URL if it looks like an absolute URL
+    if not (fe and fe.startswith("http")):
         host = os.getenv("FRONTEND_HOST")
-        if host:
-            fe = f"https://{host}"
+        fe = f"https://{host}" if host else None
     return RedirectResponse(url=fe or "/docs")
 
 
