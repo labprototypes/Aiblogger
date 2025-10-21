@@ -23,6 +23,18 @@ services:
         sync: false
       - key: ELEVENLABS_API_KEY
         sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_S3_ENDPOINT
+        sync: false
+      - key: AWS_S3_PUBLIC_BASE
+        sync: false
   - type: worker
     name: aiblogger-worker
     env: python
@@ -44,6 +56,18 @@ services:
       - key: FAL_API_KEY
         sync: false
       - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_S3_ENDPOINT
+        sync: false
+      - key: AWS_S3_PUBLIC_BASE
         sync: false
   - type: redis
     name: aiblogger-redis
