@@ -29,8 +29,9 @@ ELEVENLABS_API_KEY=...
 - Steps:
 	1) Push repo to GitHub
 	2) Render → Blueprints → New Blueprint, point to repo URL
-	3) Set env vars (ALLOWED_ORIGINS, optional OPENAI_API_KEY/FAL_API_KEY/ELEVENLABS_API_KEY)
-	4) Deploy; Health check at `/health`
+	3) Set env vars: ALLOWED_ORIGINS, and as needed OPENAI_API_KEY / FAL_API_KEY / ELEVENLABS_API_KEY
+	4) Deploy; API health at `/health`. Worker should connect to Redis automatically.
+	5) Set `NEXT_PUBLIC_API_BASE` for frontend if hosting separately.
 
 ## Local API
 - python -m pip install -r backend/requirements.txt

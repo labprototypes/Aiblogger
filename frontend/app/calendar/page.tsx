@@ -1,5 +1,6 @@
 import { api } from "../../lib/api";
 import { TaskItem } from "./TaskItem";
+import Controls from "./Controls";
 
 function getMonthDays(year: number, monthIndex: number) {
   const first = new Date(year, monthIndex, 1);
@@ -50,12 +51,12 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   return (
     <main className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+  <div className="flex items-center gap-3">
           <a href={mkLink(prev, bloggerId)} className="pill text-sm">←</a>
           <h1 className="text-2xl font-semibold">Календарь — {monthLabel}</h1>
           <a href={mkLink(next, bloggerId)} className="pill text-sm">→</a>
         </div>
-        <div className="flex items-center gap-3">
+  <div className="flex items-center gap-3">
           <form>
             <select
               name="blogger"
@@ -77,6 +78,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
             </select>
           </form>
           <div className="text-sm text-gray-400">Всего задач: {tasks.length}</div>
+          <Controls />
         </div>
       </div>
       <div className="grid grid-cols-7 gap-2">
