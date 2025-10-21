@@ -1,5 +1,4 @@
 import { api } from "../../lib/api";
-import { TaskItem } from "./TaskItem";
 import Controls from "./Controls";
 import BloggerFilter from "./BloggerFilter";
 
@@ -16,10 +15,10 @@ function getMonthDays(year: number, monthIndex: number) {
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-700 text-gray-200",
-  PLANNED: "bg-blue-700 text-blue-100",
-  SCRIPT_READY: "bg-yellow-700 text-yellow-100",
-  VISUAL_READY: "bg-purple-700 text-purple-100",
-  APPROVED: "bg-green-700 text-green-100",
+  PLANNED: "bg-sky-700 text-sky-100",
+  SCRIPT_READY: "bg-amber-700 text-amber-100",
+  VISUAL_READY: "bg-violet-700 text-violet-100",
+  APPROVED: "bg-emerald-700 text-emerald-100",
 };
 
 export default async function CalendarPage({ searchParams }: { searchParams: Promise<{ y?: string; m?: string; blogger?: string }> }) {
@@ -79,23 +78,25 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         {cells.map((c, i) => {
           const dateStr = c.date ? c.date.toISOString().slice(0, 10) : null;
           const items = dateStr ? byDate.get(dateStr) || [] : [];
+          const href = dateStr ? `/calendar/${dateStr}${bloggerId?`?blogger=${bloggerId}`:''}` : undefined;
           return (
-            <div key={i} className="card p-3 min-h-[160px]">
-              <div className="text-xs text-gray-400 mb-2 h-4">
-                {c.date && c.date.getDate()}
+            <a key={i} href={href} className={`block card p-2 min-h-[120px] transition hover:bg-white/5 ${href ? '' : 'pointer-events-none opacity-50'}`}>
+              <div className="text-xs text-gray-400 mb-2 flex items-center justify-between">
+                <span>{c.date && c.date.getDate()}</span>
+                {items.length > 0 && <span className="text-[10px] text-gray-500">{items.length}</span>}
               </div>
               <div className="space-y-1">
                 {items.slice(0, 3).map((t) => (
-                  <TaskItem key={t.id} t={t} />
+                  <div key={t.id} className="flex items-center gap-2 text-xs">
+                    <span className={`px-2 py-0.5 rounded ${statusColors[t.status] || 'bg-gray-700 text-gray-200'}`}>{t.status}</span>
+                    <span className="truncate text-gray-300">{t.content_type}</span>
+                  </div>
                 ))}
                 {items.length > 3 && (
                   <div className="text-[11px] text-gray-400">+{items.length - 3} ещё</div>
                 )}
               </div>
-              {dateStr && (
-                <QuickAdd date={dateStr} bloggers={bloggers} bloggerId={bloggerId} />
-              )}
-            </div>
+            </a>
           );
         })}
       </div>
@@ -103,37 +104,3 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   );
 }
 
-function QuickAdd({ date, bloggers, bloggerId }: { date: string; bloggers: Awaited<ReturnType<typeof api.bloggers.list>>; bloggerId?: number }) {
-  const bId = bloggerId ?? (bloggers[0]?.id as number | undefined);
-  return (
-  <form
-      action={async (formData: FormData) => {
-        'use server'
-        const blogger_id = Number(formData.get('blogger_id'));
-        const content_type = String(formData.get('content_type') || 'post');
-        const idea = String(formData.get('idea') || '');
-        await api.tasks.create({ blogger_id, date, content_type, idea, status: 'DRAFT' });
-    // Redirect to same page to show task (basic revalidate)
-    // No-op here as server action ends and page renders fresh on next request
-      }}
-      className="mt-3 flex items-center gap-2"
-    >
-      <select name="content_type" className="rounded-xl bg-[var(--bg-soft)] px-2 py-1 border border-white/10 text-xs text-gray-200">
-        <option value="post">post</option>
-        <option value="reels">reels</option>
-        <option value="story">story</option>
-        <option value="short">short</option>
-      </select>
-      <input name="idea" placeholder="идея" className="input !py-1 text-xs" />
-      <input type="hidden" name="date" value={date} />
-      <select name="blogger_id" defaultValue={bId} className="rounded-xl bg-[var(--bg-soft)] px-2 py-1 border border-white/10 text-xs text-gray-200">
-        {bloggers.map((b) => (
-          <option key={b.id} value={b.id}>{b.name}</option>
-        ))}
-      </select>
-      <button type="submit" className="pill text-xs">Добавить</button>
-    </form>
-  );
-}
-
-// nextStatus in client component now

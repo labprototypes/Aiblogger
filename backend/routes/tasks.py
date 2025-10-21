@@ -43,10 +43,12 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[TaskOut])
-def list_tasks(blogger_id: Optional[int] = None, db: Session = Depends(get_db)):
+def list_tasks(blogger_id: Optional[int] = None, date: Optional[str] = None, db: Session = Depends(get_db)):
     q = db.query(models.ContentTask)
     if blogger_id:
         q = q.filter(models.ContentTask.blogger_id == blogger_id)
+    if date:
+        q = q.filter(models.ContentTask.date == date)
     return q.order_by(models.ContentTask.date.asc()).all()
 
 
