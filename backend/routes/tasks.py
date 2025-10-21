@@ -83,3 +83,13 @@ def trigger_generation(task_id: int, db: Session = Depends(get_db)):
     task.status = "SCRIPT_READY"  # enqueued for visual generation
     db.commit()
     return {"queued": True, "task_id": task.id, "job_id": job_id}
+
+
+@router.delete("/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    db.delete(task)
+    db.commit()
+    return {"ok": True}

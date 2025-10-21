@@ -9,6 +9,8 @@ export default function EditForm({ id }: { id: number }) {
   const [theme, setTheme] = useState("");
   const [tone, setTone] = useState("");
   const [voiceId, setVoiceId] = useState("");
+  const [contentTypes, setContentTypes] = useState("");
+  const [contentSchedule, setContentSchedule] = useState("");
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +27,8 @@ export default function EditForm({ id }: { id: number }) {
   setTheme((b as any).theme || "");
   setTone((b as any).tone_of_voice || "");
   setVoiceId((b as any).voice_id || "");
+  setContentTypes(JSON.stringify((b as any).content_types || {}, null, 2));
+  setContentSchedule(JSON.stringify((b as any).content_schedule || {}, null, 2));
       } catch (e) {
         setError("Не удалось загрузить блогера");
       } finally {
@@ -52,6 +56,10 @@ export default function EditForm({ id }: { id: number }) {
           tone_of_voice: tone,
           // @ts-ignore
           voice_id: voiceId,
+          // @ts-ignore
+          content_types: safeParseJSON(contentTypes),
+          // @ts-ignore
+          content_schedule: safeParseJSON(contentSchedule),
         });
         window.location.href = "/bloggers";
       } catch (e) {
@@ -110,7 +118,24 @@ export default function EditForm({ id }: { id: number }) {
           <label className="block text-sm text-gray-400 mb-1">Voice ID</label>
           <input value={voiceId} onChange={(e) => setVoiceId(e.target.value)} className="input" placeholder="11Labs voice id" />
         </div>
+        <div className="col-span-2">
+          <label className="block text-sm text-gray-400 mb-1">content_types (JSON)</label>
+          <textarea value={contentTypes} onChange={(e) => setContentTypes(e.target.value)} className="input min-h-[120px] font-mono text-sm" placeholder='{"reels": true, "post": true}' />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-sm text-gray-400 mb-1">content_schedule (JSON)</label>
+          <textarea value={contentSchedule} onChange={(e) => setContentSchedule(e.target.value)} className="input min-h-[120px] font-mono text-sm" placeholder='{"mon": ["post"], "wed": ["reels"]}' />
+        </div>
       </div>
     </form>
   );
+}
+
+function safeParseJSON(text: string) {
+  try {
+    const v = JSON.parse(text || "null");
+    return v ?? undefined;
+  } catch {
+    return undefined;
+  }
 }

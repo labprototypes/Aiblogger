@@ -93,7 +93,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                     <a href={`/tasks/${t.id}`} className={`text-[11px] px-2 py-1 rounded ${statusColors[t.status] || "bg-gray-700 text-gray-200"}`}>
                       {t.content_type} — {t.status}
                     </a>
-          <form
+                    <form
                       action={async (formData: FormData) => {
                         'use server'
                         const next = nextStatus(t.status);
@@ -103,6 +103,22 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                       }}
                     >
                       <button type="submit" className="text-[10px] text-gray-400 hover:text-white">⟳</button>
+                    </form>
+                    <form
+                      action={async () => {
+                        'use server'
+                        await api.tasks.generate(t.id);
+                      }}
+                    >
+                      <button type="submit" className="text-[10px] text-purple-300 hover:text-purple-200">▶</button>
+                    </form>
+                    <form
+                      action={async () => {
+                        'use server'
+                        await api.tasks.delete(t.id);
+                      }}
+                    >
+                      <button type="submit" className="text-[10px] text-red-400 hover:text-red-300">✕</button>
                     </form>
                   </div>
                 ))}

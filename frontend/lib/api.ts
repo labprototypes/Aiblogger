@@ -18,6 +18,11 @@ export type Blogger = {
   name: string;
   type: string;
   image?: string | null;
+  tone_of_voice?: string | null;
+  theme?: string | null;
+  voice_id?: string | null;
+  content_schedule?: Record<string, any> | null;
+  content_types?: Record<string, any> | null;
 };
 
 export type Task = {
@@ -62,6 +67,7 @@ export const api = {
     updateStatus: (task_id: number, status: string) =>
       request<Task>(`/api/tasks/${task_id}`, { method: "PUT", body: JSON.stringify({ status }) }),
     generate: (task_id: number) => request<{ queued: boolean; task_id: number; job_id: string }>(`/api/tasks/${task_id}/generate`, { method: "POST" }),
+  delete: (task_id: number) => request<{ ok: boolean }>(`/api/tasks/${task_id}`, { method: "DELETE" }),
   },
 };
 
