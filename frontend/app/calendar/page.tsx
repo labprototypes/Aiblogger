@@ -83,7 +83,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           const dateStr = c.date ? c.date.toISOString().slice(0, 10) : null;
           const items = dateStr ? byDate.get(dateStr) || [] : [];
           return (
-            <div key={i} className="card p-3 min-h-[120px]">
+            <div key={i} className="card p-3 min-h-[160px]">
               <div className="text-xs text-gray-400 mb-2 h-4">
                 {c.date && c.date.getDate()}
               </div>
@@ -97,10 +97,44 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                   <div className="text-[11px] text-gray-400">+{items.length - 3} ещё</div>
                 )}
               </div>
+              {dateStr && (
+                <QuickAdd date={dateStr} bloggers={bloggers} bloggerId={bloggerId} />
+              )}
             </div>
           );
         })}
       </div>
     </main>
+  );
+}
+
+function QuickAdd({ date, bloggers, bloggerId }: { date: string; bloggers: Awaited<ReturnType<typeof api.bloggers.list>>; bloggerId?: number }) {
+  const bId = bloggerId ?? (bloggers[0]?.id as number | undefined);
+  return (
+    <form
+      action={async (formData: FormData) => {
+        'use server'
+        const blogger_id = Number(formData.get('blogger_id'));
+        const content_type = String(formData.get('content_type') || 'post');
+        const idea = String(formData.get('idea') || '');
+        await api.tasks.create({ blogger_id, date, content_type, idea, status: 'DRAFT' });
+      }}
+      className="mt-3 flex items-center gap-2"
+    >
+      <select name="content_type" className="rounded-xl bg-[var(--bg-soft)] px-2 py-1 border border-white/10 text-xs text-gray-200">
+        <option value="post">post</option>
+        <option value="reels">reels</option>
+        <option value="story">story</option>
+        <option value="short">short</option>
+      </select>
+      <input name="idea" placeholder="идея" className="input !py-1 text-xs" />
+      <input type="hidden" name="date" value={date} />
+      <select name="blogger_id" defaultValue={bId} className="rounded-xl bg-[var(--bg-soft)] px-2 py-1 border border-white/10 text-xs text-gray-200">
+        {bloggers.map((b) => (
+          <option key={b.id} value={b.id}>{b.name}</option>
+        ))}
+      </select>
+      <button type="submit" className="pill text-xs">Добавить</button>
+    </form>
   );
 }
