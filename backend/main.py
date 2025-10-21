@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routes.bloggers import router as bloggers_router
@@ -32,6 +33,12 @@ def on_startup():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    # Redirect root to interactive API docs to avoid 404 on Render homepage
+    return RedirectResponse(url="/docs")
 
 
 app.include_router(bloggers_router, prefix="/api/bloggers", tags=["bloggers"])
