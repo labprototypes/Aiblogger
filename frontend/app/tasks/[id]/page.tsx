@@ -1,4 +1,5 @@
 import { api, TASK_STATUSES } from "../../../lib/api";
+import TaskLive from "./TaskLive";
 
 export default async function TaskPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -67,6 +68,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
         <form action={generateScript}>
           <button type="submit" className="pill">Gen Script</button>
         </form>
+  <TaskLive id={taskId} />
       </div>
       <a className="text-sm text-gray-400" href="/calendar">← Назад в календарь</a>
       <form action={remove}>

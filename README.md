@@ -1,28 +1,38 @@
 # Aiblogger
 
-AI Blogger Studio (MVP scaffold)
+AI Blogger Studio (MVP)
 
-Quickstart (API only for now)
-- Create a .env based on .env.example
-- Install deps and run the API:
-	- With Docker: see docker-compose.yml
-	- Or locally: pip install -r backend/requirements.txt and run uvicorn backend.main:app --reload
+## Quickstart
+- Create a `.env` from `.env.example` (or set env vars in Render).
+- Backend: `pip install -r backend/requirements.txt` then `uvicorn backend.main:app --reload`.
+- Frontend: `cd frontend && npm i && npm run dev`.
 
-Planned structure
-- backend: FastAPI API, DB models, routes
-- workers: Redis queue workers (todo)
-- frontend: Next.js app (todo)
+## Environment
+```
+DATABASE_URL=postgres://...
+REDIS_URL=redis://...
+ALLOWED_ORIGINS=*
+# optional AI keys
+OPENAI_API_KEY=sk-...
+FAL_API_KEY=FAL_...
+ELEVENLABS_API_KEY=...
+```
 
-Deploy
-- Render blueprint added in render.yaml
+## Features
+- Bloggers: list/create/edit/delete; extended fields (image, theme, tone_of_voice, voice_id, content_types, content_schedule)
+- Calendar: month grid, prev/next nav, blogger filter, quick-add; inline status cycle, generate, delete; preview marker
+- Tasks: detail page, status change, delete, OpenAI-powered “Gen Script”, generate (image worker)
+- Workers: RQ worker for image processing; script generation via OpenAI utils
+
+## Deploy (Render Blueprint)
+- See `render.yaml`. It provisions Web (FastAPI), Worker (RQ), Redis, and Postgres.
 - Steps:
 	1) Push repo to GitHub
-	2) In Render -> Blueprints -> New Blueprint, point to repo URL
-	3) Render will create services: aiblogger-api (web), aiblogger-worker (worker), aiblogger-db (Postgres), aiblogger-redis (Redis)
-	4) Set env vars if needed: ALLOWED_ORIGINS (e.g., https://your-frontend)
-	5) Deploy. API health at /health
+	2) Render → Blueprints → New Blueprint, point to repo URL
+	3) Set env vars (ALLOWED_ORIGINS, optional OPENAI_API_KEY/FAL_API_KEY/ELEVENLABS_API_KEY)
+	4) Deploy; Health check at `/health`
 
-Local run (API only)
+## Local API
 - python -m pip install -r backend/requirements.txt
 - python -c "from backend.db.seed_data import init_db; init_db()"
 - uvicorn backend.main:app --reload
