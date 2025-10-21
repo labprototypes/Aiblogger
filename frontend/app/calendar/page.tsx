@@ -1,6 +1,7 @@
 import { api } from "../../lib/api";
 import { TaskItem } from "./TaskItem";
 import Controls from "./Controls";
+import BloggerFilter from "./BloggerFilter";
 
 function getMonthDays(year: number, monthIndex: number) {
   const first = new Date(year, monthIndex, 1);
@@ -57,26 +58,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           <a href={mkLink(next, bloggerId)} className="pill text-sm">→</a>
   </div>
   <div className="flex items-center gap-3">
-          <form>
-            <select
-              name="blogger"
-              defaultValue={bloggerId ?? ""}
-              className="rounded-xl bg-[var(--bg-soft)] px-3 py-2 border border-white/10 text-gray-200"
-              onChange={(e) => {
-                const v = e.currentTarget.value;
-                const url = new URL(window.location.href);
-                if (v) url.searchParams.set("blogger", v); else url.searchParams.delete("blogger");
-                url.searchParams.set("y", String(y));
-                url.searchParams.set("m", String(m));
-                window.location.href = url.toString();
-              }}
-            >
-              <option value="">Все блогеры</option>
-              {bloggers.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-          </form>
+          <BloggerFilter bloggers={bloggers} bloggerId={bloggerId} y={y} m={m} />
           <div className="text-sm text-gray-400">Всего задач: {tasks.length}</div>
           <Controls />
           <form
