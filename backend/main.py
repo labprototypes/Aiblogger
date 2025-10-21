@@ -37,8 +37,9 @@ def health():
 
 @app.get("/", include_in_schema=False)
 def root():
-    # Redirect root to interactive API docs to avoid 404 on Render homepage
-    return RedirectResponse(url="/docs")
+    # If FRONTEND_URL is set, redirect there; otherwise show API docs
+    fe = os.getenv("FRONTEND_URL")
+    return RedirectResponse(url=fe or "/docs")
 
 
 app.include_router(bloggers_router, prefix="/api/bloggers", tags=["bloggers"])
