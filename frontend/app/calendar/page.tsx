@@ -1,4 +1,5 @@
 import { api } from "../../lib/api";
+import { TaskItem } from "./TaskItem";
 
 function getMonthDays(year: number, monthIndex: number) {
   const first = new Date(year, monthIndex, 1);
@@ -89,38 +90,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
               </div>
               <div className="space-y-1">
                 {items.slice(0, 3).map((t) => (
-                  <div key={t.id} className="flex items-center gap-2">
-                    <a href={`/tasks/${t.id}`} className={`text-[11px] px-2 py-1 rounded ${statusColors[t.status] || "bg-gray-700 text-gray-200"}`}>
-                      {t.content_type} — {t.status}
-                    </a>
-                    <form
-                      action={async (formData: FormData) => {
-                        'use server'
-                        const next = nextStatus(t.status);
-                        await api.tasks.updateStatus(t.id, next);
-            // Invalidate calendar cache by redirecting to same URL
-            // (simple approach for now)
-                      }}
-                    >
-                      <button type="submit" className="text-[10px] text-gray-400 hover:text-white">⟳</button>
-                    </form>
-                    <form
-                      action={async () => {
-                        'use server'
-                        await api.tasks.generate(t.id);
-                      }}
-                    >
-                      <button type="submit" className="text-[10px] text-purple-300 hover:text-purple-200">▶</button>
-                    </form>
-                    <form
-                      action={async () => {
-                        'use server'
-                        await api.tasks.delete(t.id);
-                      }}
-                    >
-                      <button type="submit" className="text-[10px] text-red-400 hover:text-red-300">✕</button>
-                    </form>
-                  </div>
+                  <TaskItem key={t.id} t={t} />
                 ))}
                 {items.length > 3 && (
                   <div className="text-[11px] text-gray-400">+{items.length - 3} ещё</div>
@@ -170,8 +140,4 @@ function QuickAdd({ date, bloggers, bloggerId }: { date: string; bloggers: Await
   );
 }
 
-function nextStatus(cur: string) {
-  const order = ["DRAFT", "PLANNED", "SCRIPT_READY", "VISUAL_READY", "APPROVED"] as const;
-  const i = order.indexOf(cur as any);
-  return order[(i + 1) % order.length];
-}
+// nextStatus in client component now

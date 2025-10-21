@@ -16,6 +16,11 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
     await api.tasks.generate(taskId);
   }
 
+  async function remove() {
+    'use server'
+    await api.tasks.delete(taskId);
+  }
+
   return (
     <main className="space-y-4">
       <h1 className="text-2xl font-semibold">Задача #{task.id}</h1>
@@ -56,6 +61,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
         </form>
       </div>
       <a className="text-sm text-gray-400" href="/calendar">← Назад в календарь</a>
+      <form action={remove}>
+        <button className="text-red-400 hover:text-red-300" onClick={() => { if (!confirm('Удалить задачу?')) throw new Error('cancel'); }}>Удалить задачу</button>
+      </form>
     </main>
   );
 }
