@@ -50,6 +50,7 @@ services:
           name: aiblogger-frontend
           type: web
           property: host
+
   - type: worker
     name: aiblogger-worker
     env: python
@@ -84,19 +85,21 @@ services:
         sync: false
       - key: AWS_S3_PUBLIC_BASE
         sync: false
+
   - type: redis
     name: aiblogger-redis
     plan: free
     ipAllowList: []
     maxmemoryPolicy: noeviction
+
   - type: web
     name: aiblogger-frontend
     env: node
     plan: free
     rootDir: frontend
     buildCommand: npm ci && npm run build
-  startCommand: PORT=$PORT npm run start
-  envVars:
+    startCommand: PORT=$PORT npm run start
+    envVars:
       - key: NEXT_PUBLIC_API_HOST
         fromService:
           name: aiblogger-api
