@@ -32,7 +32,10 @@ function BloggerRow({ id, name, type }: { id: number; name: string; type: string
         <div className="font-medium">{name}</div>
         <div className="text-sm text-gray-400">{type}</div>
       </div>
-      <DeleteButton id={id} />
+      <div className="flex items-center gap-3">
+        <a href={`/bloggers/${id}/edit`} className="text-lime-400 hover:text-lime-300">Редактировать</a>
+        <DeleteButton id={id} />
+      </div>
     </li>
   );
 }
