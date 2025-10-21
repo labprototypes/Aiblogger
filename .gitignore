@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+local.db
+
+# Node/Next.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+
+# OS
+.DS_Store

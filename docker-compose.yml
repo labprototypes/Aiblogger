@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./:/app
+    environment:
+      - DATABASE_URL=sqlite:///./local.db
+      - ALLOWED_ORIGINS=*
+    ports:
+      - "8000:8000"
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: python -m backend.workers.worker_entry
+    environment:
+      - DATABASE_URL=sqlite:///./local.db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
