@@ -1,3 +1,8 @@
+import { Button } from "../components/ui/Button";
+import { Badge } from "../components/ui/Badge";
+import { Input } from "../components/ui/Input";
+import { Progress } from "../components/ui/Progress";
+
 export default function HomePage() {
   return (
     <main className="space-y-6">
@@ -6,7 +11,7 @@ export default function HomePage() {
           <h1 className="text-2xl font-semibold">Dashboard — Бэтчи</h1>
           <p className="mt-1 text-gray-400">Переключайтесь между днями, смотрите прогресс и ищите по коду.</p>
         </div>
-        <button className="btn">Экспорт батча</button>
+  <Button>Экспорт батча</Button>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -15,10 +20,7 @@ export default function HomePage() {
           <div className="ml-auto text-sm text-gray-400">Всего: 1 · Готово: 0%</div>
         </div>
         <div className="card p-4 md:col-span-2">
-          <input
-            placeholder="Поиск по SKU…"
-            className="w-full rounded-xl bg-bg-soft px-4 py-2 outline-none border border-white/10"
-          />
+          <Input placeholder="Поиск по SKU…" />
         </div>
       </div>
 
@@ -34,7 +36,7 @@ export default function HomePage() {
           <a className="text-accent hover:underline" href="#">136062ZX1-00</a>
           <div>—</div>
           <div>0/4 (0%)</div>
-          <div><span className="pill text-gray-300">В работе</span></div>
+          <div><Badge>В работе</Badge></div>
           <div className="text-right text-gray-400">8/19/2025, 9:08 AM</div>
         </div>
       </div>
