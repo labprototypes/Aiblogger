@@ -1,4 +1,5 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const apiHost = process.env.NEXT_PUBLIC_API_HOST;
+export const API_BASE = apiHost ? `https://${apiHost}` : "http://localhost:8000";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {

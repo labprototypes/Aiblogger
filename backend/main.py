@@ -37,8 +37,12 @@ def health():
 
 @app.get("/", include_in_schema=False)
 def root():
-    # If FRONTEND_URL is set, redirect there; otherwise show API docs
+    # If FRONTEND_URL (full) or FRONTEND_HOST is set, redirect there; otherwise show API docs
     fe = os.getenv("FRONTEND_URL")
+    if not fe:
+        host = os.getenv("FRONTEND_HOST")
+        if host:
+            fe = f"https://{host}"
     return RedirectResponse(url=fe or "/docs")
 
 

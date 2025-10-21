@@ -44,10 +44,12 @@ services:
       - key: RUN_WORKER
         value: "0"
       - key: FRONTEND_URL
+        sync: false
+      - key: FRONTEND_HOST
         fromService:
           name: aiblogger-frontend
           type: web
-          property: url
+          property: host
   - type: worker
     name: aiblogger-worker
     env: python
@@ -95,11 +97,11 @@ services:
     buildCommand: npm ci && npm run build
     startCommand: next start -p $PORT
     envVars:
-      - key: NEXT_PUBLIC_API_BASE
+      - key: NEXT_PUBLIC_API_HOST
         fromService:
           name: aiblogger-api
           type: web
-          property: url
+          property: host
 
 databases:
   - name: aiblogger-db
