@@ -23,5 +23,7 @@ export type Blogger = {
 export const api = {
   bloggers: {
     list: () => request<Blogger[]>("/api/bloggers/"),
+    create: (data: { name: string; type: string }) =>
+      request<Blogger>("/api/bloggers/", { method: "POST", body: JSON.stringify(data) }),
   },
 };

@@ -1,4 +1,5 @@
 import { api } from "../../lib/api";
+import CreateBlogger from "./CreateBlogger";
 
 export default async function BloggersPage() {
   const bloggers = await api.bloggers.list().catch(() => []);
@@ -6,6 +7,10 @@ export default async function BloggersPage() {
     <main className="space-y-4">
       <h1 className="text-2xl font-semibold">Блогеры</h1>
       <div className="card p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="text-gray-400 text-sm">Всего: {bloggers.length}</div>
+          <CreateBlogger />
+        </div>
         {bloggers.length === 0 ? (
           <div className="text-gray-400">Пока пусто. Добавьте первого блогера через API.</div>
         ) : (
