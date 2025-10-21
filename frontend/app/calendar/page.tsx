@@ -93,11 +93,13 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                     <a href={`/tasks/${t.id}`} className={`text-[11px] px-2 py-1 rounded ${statusColors[t.status] || "bg-gray-700 text-gray-200"}`}>
                       {t.content_type} — {t.status}
                     </a>
-                    <form
+          <form
                       action={async (formData: FormData) => {
                         'use server'
                         const next = nextStatus(t.status);
                         await api.tasks.updateStatus(t.id, next);
+            // Invalidate calendar cache by redirecting to same URL
+            // (simple approach for now)
                       }}
                     >
                       <button type="submit" className="text-[10px] text-gray-400 hover:text-white">⟳</button>
@@ -122,13 +124,15 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
 function QuickAdd({ date, bloggers, bloggerId }: { date: string; bloggers: Awaited<ReturnType<typeof api.bloggers.list>>; bloggerId?: number }) {
   const bId = bloggerId ?? (bloggers[0]?.id as number | undefined);
   return (
-    <form
+  <form
       action={async (formData: FormData) => {
         'use server'
         const blogger_id = Number(formData.get('blogger_id'));
         const content_type = String(formData.get('content_type') || 'post');
         const idea = String(formData.get('idea') || '');
         await api.tasks.create({ blogger_id, date, content_type, idea, status: 'DRAFT' });
+    // Redirect to same page to show task (basic revalidate)
+    // No-op here as server action ends and page renders fresh on next request
       }}
       className="mt-3 flex items-center gap-2"
     >

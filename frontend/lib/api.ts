@@ -37,7 +37,19 @@ export const api = {
     create: (data: { name: string; type: string }) =>
       request<Blogger>("/api/bloggers/", { method: "POST", body: JSON.stringify(data) }),
     get: (id: number) => request<Blogger>(`/api/bloggers/${id}`),
-    update: (id: number, data: { name: string; type: string }) =>
+    update: (
+      id: number,
+      data: {
+        name: string;
+        type: string;
+        image?: string;
+        tone_of_voice?: string;
+        theme?: string;
+        voice_id?: string;
+        content_schedule?: Record<string, any>;
+        content_types?: Record<string, any>;
+      }
+    ) =>
       request<Blogger>(`/api/bloggers/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (id: number) => request<{ ok: boolean }>(`/api/bloggers/${id}`, { method: "DELETE" }),
   },

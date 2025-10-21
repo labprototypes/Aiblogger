@@ -41,7 +41,18 @@ export default function EditForm({ id }: { id: number }) {
     setError(null);
     startTransition(async () => {
       try {
-        await api.bloggers.update(id, { name: name.trim(), type });
+        await api.bloggers.update(id, {
+          name: name.trim(),
+          type,
+          // @ts-ignore - backend accepts these optional fields
+          image,
+          // @ts-ignore
+          theme,
+          // @ts-ignore
+          tone_of_voice: tone,
+          // @ts-ignore
+          voice_id: voiceId,
+        });
         window.location.href = "/bloggers";
       } catch (e) {
         setError("Сохранение не удалось");

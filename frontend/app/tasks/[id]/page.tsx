@@ -50,9 +50,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
             ))}
           </select>
           <button type="submit" className="btn">Сохранить статус</button>
-          <form action={generate}>
-            <button type="submit" className="pill">Generate</button>
-          </form>
+        </form>
+        <form action={generate}>
+          <button type="submit" className="pill">Generate</button>
         </form>
       </div>
       <a className="text-sm text-gray-400" href="/calendar">← Назад в календарь</a>
