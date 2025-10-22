@@ -1,5 +1,5 @@
 import os
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from ..utils.openai_chat import generate_text
 from sqlalchemy.orm import Session
@@ -26,7 +26,7 @@ class MetaGenerateRequest(BaseModel):
 
 
 @router.post("/meta/generate")
-def generate_meta(req: MetaGenerateRequest, db: Session = get_db()):
+def generate_meta(req: MetaGenerateRequest, db: Session = Depends(get_db)):
     task = db.query(models.ContentTask).get(req.task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -50,7 +50,7 @@ class SaveVersionRequest(BaseModel):
 
 
 @router.post("/versions")
-def save_version(req: SaveVersionRequest, db: Session = get_db()):
+def save_version(req: SaveVersionRequest, db: Session = Depends(get_db)):
     v = models.TaskVersion(task_id=req.task_id, kind=req.kind, content=req.content)
     db.add(v)
     db.commit()
@@ -58,12 +58,12 @@ def save_version(req: SaveVersionRequest, db: Session = get_db()):
 
 
 @router.get("/versions/{task_id}")
-def list_versions(task_id: int, db: Session = get_db()):
+def list_versions(task_id: int, db: Session = Depends(get_db)):
     return db.query(models.TaskVersion).filter(models.TaskVersion.task_id == task_id).order_by(models.TaskVersion.id.desc()).all()
 
 
 @router.get("/meta/{task_id}")
-def get_meta(task_id: int, db: Session = get_db()):
+def get_meta(task_id: int, db: Session = Depends(get_db)):
     meta = db.query(models.TaskMeta).filter(models.TaskMeta.task_id == task_id).order_by(models.TaskMeta.id.desc()).first()
     if not meta:
         return {"task_id": task_id, "data": None}
