@@ -43,6 +43,11 @@ def upload_bytes(key: str, data: bytes, content_type: Optional[str] = None) -> s
     return _public_url(bucket, key)
 
 
+def upload_bytes_to_s3(data: bytes, key: str, content_type: Optional[str] = None) -> str:
+    """Alias for upload_bytes with reordered params for convenience"""
+    return upload_bytes(key, data, content_type)
+
+
 def upload_url_to_s3(url: str, key: str, content_type: Optional[str] = None) -> str:
     with urllib.request.urlopen(url, timeout=120) as resp:
         data = resp.read()

@@ -10,11 +10,19 @@ class Blogger(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
-    type = Column(String(50), nullable=False)
-    image = Column(String(1024))
+    type = Column(String(50), nullable=False)  # "podcaster" or "fashion"
+    image = Column(String(1024))  # Main frontal photo URL
     tone_of_voice = Column(Text)
     theme = Column(Text)
     voice_id = Column(String(255))
+    
+    # New fields
+    locations = Column(JSON)  # [{url: "s3://...", type: "main"}]
+    editing_type = Column(String(50))  # "overlay", "rotoscope", "static"
+    subtitles_enabled = Column(Integer, default=0)  # 0 or 1 (boolean)
+    content_frequency = Column(JSON)  # {"reels": 3, "post": 2} per week
+    
+    # Legacy fields (deprecated but kept for compatibility)
     content_schedule = Column(JSON)
     content_types = Column(JSON)
 
