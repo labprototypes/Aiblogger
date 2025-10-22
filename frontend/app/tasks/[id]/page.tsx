@@ -1,6 +1,7 @@
 import { api, TASK_STATUSES } from "../../../lib/api";
 import TaskLive from "./TaskLive";
 import TaskEdit from "./TaskEdit";
+import TaskMeta from "./TaskMeta";
 
 export default async function TaskPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -55,6 +56,12 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           <h2 className="text-lg font-semibold mb-4">Контент</h2>
           <TaskEdit task={task} />
         </div>
+
+        {(task.status === "SCRIPT_READY" || task.status === "VISUAL_READY" || task.status === "APPROVED") && (
+          <div className="border-t border-white/10 pt-6">
+            <TaskMeta taskId={task.id} />
+          </div>
+        )}
 
         {task.preview_url && (
           <div className="border-t border-white/10 pt-6">

@@ -75,6 +75,7 @@ export const api = {
   },
   assistant: {
     generateMeta: (task_id: number) => request<{ ok: boolean; task_id: number }>(`/api/assistant/meta/generate`, { method: "POST", body: JSON.stringify({ task_id }) }),
+    getMeta: (task_id: number) => request<{ task_id: number; data: any | null }>(`/api/assistant/meta/${task_id}`),
   },
 };
 

@@ -60,3 +60,11 @@ def save_version(req: SaveVersionRequest, db: Session = get_db()):
 @router.get("/versions/{task_id}")
 def list_versions(task_id: int, db: Session = get_db()):
     return db.query(models.TaskVersion).filter(models.TaskVersion.task_id == task_id).order_by(models.TaskVersion.id.desc()).all()
+
+
+@router.get("/meta/{task_id}")
+def get_meta(task_id: int, db: Session = get_db()):
+    meta = db.query(models.TaskMeta).filter(models.TaskMeta.task_id == task_id).order_by(models.TaskMeta.id.desc()).first()
+    if not meta:
+        return {"task_id": task_id, "data": None}
+    return {"task_id": task_id, "data": meta.data}
