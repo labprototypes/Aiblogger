@@ -21,7 +21,7 @@ export default function CreateBlogger() {
 
   // New fields
   const [locations, setLocations] = useState<string[]>([]);
-  const [editingType, setEditingType] = useState<"overlay" | "rotoscope" | "static">("overlay");
+  const [editingTypesEnabled, setEditingTypesEnabled] = useState<string[]>([]);
   const [subtitlesEnabled, setSubtitlesEnabled] = useState(false);
   
   // Content frequency: {reels: 3, post: 2, story: 1, short: 0}
@@ -36,15 +36,23 @@ export default function CreateBlogger() {
     setBloggerType(type);
     // Set defaults based on type
     if (type === "podcaster") {
-      setEditingType("overlay");
+      setEditingTypesEnabled(["overlay"]); // Default for podcaster
     } else {
-      setEditingType("static");
+      setEditingTypesEnabled(["static"]); // Default for fashion
     }
     setStep(2);
   };
 
   const handleBack = () => {
     setStep(1);
+  };
+  
+  const toggleEditingType = (type: string) => {
+    if (editingTypesEnabled.includes(type)) {
+      setEditingTypesEnabled(editingTypesEnabled.filter(t => t !== type));
+    } else {
+      setEditingTypesEnabled([...editingTypesEnabled, type]);
+    }
   };
 
   const handleSubmit = async () => {
@@ -69,7 +77,7 @@ export default function CreateBlogger() {
         voice_id: voiceId || undefined,
         locations: locations.length > 0 ? locations : undefined,
         // @ts-ignore
-        editing_type: editingType,
+        editing_types_enabled: editingTypesEnabled.length > 0 ? editingTypesEnabled : undefined,
         // @ts-ignore
         subtitles_enabled: subtitlesEnabled ? 1 : 0,
         // @ts-ignore
@@ -86,7 +94,7 @@ export default function CreateBlogger() {
       setTheme("");
       setVoiceId("");
       setLocations([]);
-      setEditingType("overlay");
+      setEditingTypesEnabled([]);
       setSubtitlesEnabled(false);
       setFreqReels(0);
       setFreqPost(0);
@@ -227,26 +235,28 @@ export default function CreateBlogger() {
                       Настройки монтажа
                     </h3>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">Тип монтажа</label>
-                      <div className="flex gap-4">
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Доступные типы монтажа (можно выбрать несколько)
+                      </label>
+                      <div className="flex flex-wrap gap-4">
                         {bloggerType === "podcaster" ? (
                           <>
                             <label className="flex items-center gap-2 cursor-pointer">
                               <input
-                                type="radio"
+                                type="checkbox"
                                 value="overlay"
-                                checked={editingType === "overlay"}
-                                onChange={(e) => setEditingType(e.target.value as any)}
+                                checked={editingTypesEnabled.includes("overlay")}
+                                onChange={() => toggleEditingType("overlay")}
                                 className="w-4 h-4"
                               />
                               <span className="text-white">Overlay</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer">
                               <input
-                                type="radio"
+                                type="checkbox"
                                 value="rotoscope"
-                                checked={editingType === "rotoscope"}
-                                onChange={(e) => setEditingType(e.target.value as any)}
+                                checked={editingTypesEnabled.includes("rotoscope")}
+                                onChange={() => toggleEditingType("rotoscope")}
                                 className="w-4 h-4"
                               />
                               <span className="text-white">Rotoscope</span>
@@ -255,16 +265,19 @@ export default function CreateBlogger() {
                         ) : (
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
-                              type="radio"
+                              type="checkbox"
                               value="static"
-                              checked={editingType === "static"}
-                              onChange={(e) => setEditingType(e.target.value as any)}
+                              checked={editingTypesEnabled.includes("static")}
+                              onChange={() => toggleEditingType("static")}
                               className="w-4 h-4"
                             />
                             <span className="text-white">Static</span>
                           </label>
                         )}
                       </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Эти типы будут доступны при создании задач в календаре
+                      </p>
                     </div>
                     {bloggerType === "podcaster" && (
                       <label className="flex items-center gap-2 cursor-pointer">

@@ -1,4 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastclass BloggerCreate(BaseModel):
+    name: str
+    type: str  # "podcaster" or "fashion"
+    image: Optional[str] = None
+    tone_of_voice: Optional[str] = None
+    theme: Optional[str] = None
+    voice_id: Optional[str] = None
+    content_schedule: Optional[dict] = None  # deprecated, keeping for backward compat
+    content_types: Optional[dict] = None  # deprecated, keeping for backward compat
+    locations: Optional[list] = None  # list of location image URLs
+    editing_types_enabled: Optional[list] = None  # ["overlay", "rotoscope", "static"] - enabled options
+    subtitles_enabled: Optional[int] = 0  # 1 or 0
+    content_frequency: Optional[dict] = None  # {"reels": 3, "post": 2, ...}IRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -33,7 +45,7 @@ class BloggerOut(BaseModel):
     content_schedule: Optional[dict]
     content_types: Optional[dict]
     locations: Optional[list]
-    editing_type: Optional[str]
+    editing_types_enabled: Optional[list]
     subtitles_enabled: Optional[int]
     content_frequency: Optional[dict]
 

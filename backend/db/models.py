@@ -18,7 +18,7 @@ class Blogger(Base):
     
     # New fields
     locations = Column(JSON)  # [{url: "s3://...", type: "main"}]
-    editing_type = Column(String(50))  # "overlay", "rotoscope", "static"
+    editing_types_enabled = Column(JSON)  # ["overlay", "rotoscope", "static"] - available options
     subtitles_enabled = Column(Integer, default=0)  # 0 or 1 (boolean)
     content_frequency = Column(JSON)  # {"reels": 3, "post": 2} per week
     
@@ -40,6 +40,7 @@ class ContentTask(Base):
     status = Column(String(50), default="DRAFT")
     script = Column(Text)
     preview_url = Column(String(1024))
+    editing_type = Column(String(50))  # Selected editing type for this specific task
 
     blogger = relationship("Blogger", back_populates="tasks")
 
