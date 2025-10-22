@@ -26,9 +26,9 @@ export default function TaskEdit({ task }: { task: Task }) {
     setError(null);
     startTransition(async () => {
       try {
-        // Согласовать = сохранить скрипт + поменять статус + подобрать мета
+        // Сохранить скрипт (backend автоматически поставит SCRIPT_READY)
         await api.tasks.updateContent(task.id, { script });
-        await api.tasks.updateStatus(task.id, "SCRIPT_READY");
+        // Подобрать мета-рекомендации (стиль/одежда/локация)
         await api.assistant.generateMeta(task.id);
         router.refresh();
       } catch (e) {

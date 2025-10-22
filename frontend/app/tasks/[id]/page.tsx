@@ -80,12 +80,15 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
                 <button type="submit" className="pill">Расписать сценарий (AI)</button>
               </form>
             )}
-            {task.script && (
+            {task.script && task.status !== "VISUAL_READY" && task.status !== "APPROVED" && (
               <form action={generate}>
                 <button type="submit" className="pill">Сгенерировать контент</button>
               </form>
             )}
             <TaskLive id={taskId} />
+          </div>
+          <div className="text-xs text-gray-400 mt-2">
+            💡 Статусы обновляются автоматически: Gen Script → SCRIPT_READY, Generate → VISUAL_READY
           </div>
         </div>
       </div>
