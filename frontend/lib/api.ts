@@ -67,11 +67,14 @@ export const api = {
       request<Task>("/api/tasks", { method: "POST", body: JSON.stringify(data) }),
     updateStatus: (task_id: number, status: string) =>
       request<Task>(`/api/tasks/${task_id}`, { method: "PUT", body: JSON.stringify({ status }) }),
-  generate: (task_id: number) => request<{ queued: boolean; task_id: number; job_id: string }>(`/api/tasks/${task_id}/generate`, { method: "POST" }),
-  generateScript: (task_id: number) => request<{ ok: boolean; task_id: number; status: string }>(`/api/tasks/${task_id}/script`, { method: "POST" }),
-  updateContent: (task_id: number, data: { idea?: string; script?: string }) => request(`/api/tasks/${task_id}/content`, { method: "PUT", body: JSON.stringify(data) }),
-  autoPlan: (blogger_id: number, year: number, month: number, content_type = "video") => request<{ queued: boolean; job_id: string; days: number }>(`/api/tasks/plan/auto`, { method: "POST", body: JSON.stringify({ blogger_id, year, month, content_type }) }),
-  delete: (task_id: number) => request<{ ok: boolean }>(`/api/tasks/${task_id}`, { method: "DELETE" }),
+    generate: (task_id: number) => request<{ queued: boolean; task_id: number; job_id: string }>(`/api/tasks/${task_id}/generate`, { method: "POST" }),
+    generateScript: (task_id: number) => request<{ ok: boolean; task_id: number; status: string }>(`/api/tasks/${task_id}/script`, { method: "POST" }),
+    updateContent: (task_id: number, data: { idea?: string; script?: string }) => request(`/api/tasks/${task_id}/content`, { method: "PUT", body: JSON.stringify(data) }),
+    autoPlan: (blogger_id: number, year: number, month: number, content_type = "video") => request<{ queued: boolean; job_id: string; days: number }>(`/api/tasks/plan/auto`, { method: "POST", body: JSON.stringify({ blogger_id, year, month, content_type }) }),
+    delete: (task_id: number) => request<{ ok: boolean }>(`/api/tasks/${task_id}`, { method: "DELETE" }),
+  },
+  assistant: {
+    generateMeta: (task_id: number) => request<{ ok: boolean; task_id: number }>(`/api/assistant/meta/generate`, { method: "POST", body: JSON.stringify({ task_id }) }),
   },
 };
 
