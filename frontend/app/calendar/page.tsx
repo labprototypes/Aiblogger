@@ -21,6 +21,14 @@ const statusColors: Record<string, string> = {
   APPROVED: "bg-emerald-700 text-emerald-100",
 };
 
+const contentTypeIcons: Record<string, string> = {
+  reels: "🎬",
+  post: "📝",
+  story: "📸",
+  short: "▶️",
+  video: "🎥",
+};
+
 export default async function CalendarPage({ searchParams }: { searchParams: Promise<{ y?: string; m?: string; blogger?: string }> }) {
   const sp = await searchParams;
   const now = new Date();
@@ -75,25 +83,48 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
       <div className="grid grid-cols-7 gap-2">
+        {/* Header row with day names */}
+        {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((day, i) => (
+          <div key={`header-${i}`} className="text-center text-xs font-semibold text-gray-400 py-2">
+            {day}
+          </div>
+        ))}
         {cells.map((c, i) => {
           const dateStr = c.date ? c.date.toISOString().slice(0, 10) : null;
           const items = dateStr ? byDate.get(dateStr) || [] : [];
           const href = dateStr ? `/calendar/${dateStr}${bloggerId?`?blogger=${bloggerId}`:''}` : undefined;
+          const isToday = dateStr === new Date().toISOString().slice(0, 10);
           return (
-            <a key={i} href={href} className={`block card p-2 min-h-[120px] transition hover:bg-white/5 ${href ? '' : 'pointer-events-none opacity-50'}`}>
-              <div className="text-xs text-gray-400 mb-2 flex items-center justify-between">
+            <a 
+              key={i} 
+              href={href} 
+              className={`block card p-3 min-h-[180px] transition hover:scale-[1.02] hover:shadow-lg ${href ? '' : 'pointer-events-none opacity-30'} ${isToday ? 'ring-2 ring-lime-400' : ''}`}
+            >
+              <div className="text-sm font-semibold text-gray-300 mb-3 flex items-center justify-between">
                 <span>{c.date && c.date.getDate()}</span>
-                {items.length > 0 && <span className="text-[10px] text-gray-500">{items.length}</span>}
+                {items.length > 0 && (
+                  <span className="text-[10px] bg-lime-400/20 text-lime-400 px-1.5 py-0.5 rounded-full">
+                    {items.length}
+                  </span>
+                )}
               </div>
-              <div className="space-y-1">
-                {items.slice(0, 3).map((t) => (
-                  <div key={t.id} className="flex items-center gap-2 text-xs">
-                    <span className={`px-2 py-0.5 rounded ${statusColors[t.status] || 'bg-gray-700 text-gray-200'}`}>{t.status}</span>
-                    <span className="truncate text-gray-300">{t.content_type}</span>
-                  </div>
-                ))}
-                {items.length > 3 && (
-                  <div className="text-[11px] text-gray-400">+{items.length - 3} ещё</div>
+              <div className="space-y-2">
+                {items.slice(0, 4).map((t) => {
+                  const icon = contentTypeIcons[t.content_type] || "📄";
+                  return (
+                    <div key={t.id} className="text-xs rounded p-1.5 bg-white/5 hover:bg-white/10 transition">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-sm">{icon}</span>
+                        <span className="text-gray-300 truncate flex-1">{t.content_type}</span>
+                      </div>
+                      <div className={`text-[10px] px-1.5 py-0.5 rounded inline-block ${statusColors[t.status] || 'bg-gray-700 text-gray-200'}`}>
+                        {t.status}
+                      </div>
+                    </div>
+                  );
+                })}
+                {items.length > 4 && (
+                  <div className="text-[10px] text-gray-400 text-center pt-1">+{items.length - 4} ещё</div>
                 )}
               </div>
             </a>
