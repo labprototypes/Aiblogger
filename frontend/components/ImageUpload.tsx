@@ -13,6 +13,7 @@ type ImageUploadProps = {
 export default function ImageUpload({ value, onChange, multiple = false, label, maxFiles = 5 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentUrls = Array.isArray(value) ? value : value ? [value] : [];
@@ -21,11 +22,20 @@ export default function ImageUpload({ value, onChange, multiple = false, label, 
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    await uploadFiles(Array.from(files));
+  };
+
+  const uploadFiles = async (files: File[]) => {
     setError(null);
     setUploading(true);
 
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
+      const uploadPromises = files.map(async (file) => {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          throw new Error(`Файл ${file.name} не является изображением`);
+        }
+
         const formData = new FormData();
         formData.append("file", file);
 
@@ -34,7 +44,10 @@ export default function ImageUpload({ value, onChange, multiple = false, label, 
           body: formData,
         });
 
-        if (!res.ok) throw new Error("Upload failed");
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.detail || "Upload failed");
+        }
         const data = await res.json();
         return data.url;
       });
@@ -47,8 +60,8 @@ export default function ImageUpload({ value, onChange, multiple = false, label, 
       } else {
         onChange(urls[0]);
       }
-    } catch (e) {
-      setError("Не удалось загрузить файл");
+    } catch (e: any) {
+      setError(e.message || "Не удалось загрузить файл");
       console.error(e);
     } finally {
       setUploading(false);
@@ -66,13 +79,40 @@ export default function ImageUpload({ value, onChange, multiple = false, label, 
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const input = fileInputRef.current;
-    if (input && e.dataTransfer.files) {
-      input.files = e.dataTransfer.files;
-      input.dispatchEvent(new Event("change", { bubbles: true }));
+    e.stopPropagation();
+    setDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files).filter((file) => 
+      file.type.startsWith('image/')
+    );
+
+    if (files.length === 0) {
+      setError("Пожалуйста, загрузите изображения (PNG, JPG, JPEG, WEBP)");
+      return;
     }
+
+    await uploadFiles(files);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set dragOver to false if we're leaving the component, not a child
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setDragOver(false);
   };
 
   return (
@@ -107,14 +147,20 @@ export default function ImageUpload({ value, onChange, multiple = false, label, 
       {(!multiple || currentUrls.length < maxFiles) && (
         <div
           onDrop={handleDrop}
-          onDragOver={(e) => e.preventDefault()}
-          className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-lime-400/50 transition cursor-pointer"
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition cursor-pointer ${
+            dragOver 
+              ? "border-lime-400 bg-lime-400/10" 
+              : "border-white/20 hover:border-lime-400/50"
+          }`}
           onClick={() => fileInputRef.current?.click()}
         >
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
             multiple={multiple}
             onChange={handleFileChange}
             className="hidden"
@@ -125,7 +171,7 @@ export default function ImageUpload({ value, onChange, multiple = false, label, 
             <>
               <div className="text-4xl mb-2">📸</div>
               <div className="text-sm text-gray-400">
-                Нажмите или перетащите {multiple ? "изображения" : "изображение"}
+                Нажмите или перетащите {multiple ? "изображения" : "изображение"} (PNG, JPG, JPEG, WEBP)
               </div>
               {multiple && (
                 <div className="text-xs text-gray-500 mt-1">
