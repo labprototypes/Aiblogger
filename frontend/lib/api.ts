@@ -1,5 +1,19 @@
 const apiHost = process.env.NEXT_PUBLIC_API_HOST;
-export const API_BASE = apiHost ? `https://${apiHost}` : "http://localhost:8000";
+// Handle both full URLs and hostnames
+let API_BASE: string;
+if (apiHost) {
+  // If already includes protocol, use as-is
+  if (apiHost.startsWith('http://') || apiHost.startsWith('https://')) {
+    API_BASE = apiHost.replace(/\/$/, ''); // Remove trailing slash
+  } else {
+    // Otherwise, assume it's a hostname and add https://
+    API_BASE = `https://${apiHost}`;
+  }
+} else {
+  API_BASE = "http://localhost:8000";
+}
+
+export { API_BASE };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
