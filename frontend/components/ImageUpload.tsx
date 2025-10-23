@@ -39,16 +39,23 @@ export default function ImageUpload({ value, onChange, multiple = false, label, 
         const formData = new FormData();
         formData.append("file", file);
 
+        console.log('Uploading to:', `${API_BASE}/api/upload/image`);
+        console.log('File:', file.name, file.type, file.size);
+
         const res = await fetch(`${API_BASE}/api/upload/image`, {
           method: "POST",
           body: formData,
         });
 
+        console.log('Response status:', res.status);
+
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.detail || "Upload failed");
+          console.error('Upload error:', errorData);
+          throw new Error(errorData.detail || `Upload failed: ${res.status}`);
         }
         const data = await res.json();
+        console.log('Upload success:', data);
         return data.url;
       });
 
