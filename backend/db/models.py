@@ -26,7 +26,7 @@ class Blogger(Base):
     content_schedule = Column(JSON)
     content_types = Column(JSON)
 
-    tasks = relationship("ContentTask", back_populates="blogger")
+    tasks = relationship("ContentTask", back_populates="blogger", cascade="all, delete-orphan")
 
 
 class ContentTask(Base):

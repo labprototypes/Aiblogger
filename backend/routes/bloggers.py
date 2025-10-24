@@ -83,6 +83,11 @@ def delete_blogger(blogger_id: int, db: Session = Depends(get_db)):
     blogger = db.query(models.Blogger).get(blogger_id)
     if not blogger:
         raise HTTPException(status_code=404, detail="Blogger not found")
+    
+    # Delete all related tasks first (cascade should handle this, but being explicit)
+    db.query(models.ContentTask).filter(models.ContentTask.blogger_id == blogger_id).delete()
+    
+    # Delete blogger
     db.delete(blogger)
     db.commit()
     return {"ok": True}
