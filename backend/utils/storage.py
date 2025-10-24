@@ -39,7 +39,8 @@ def upload_bytes(key: str, data: bytes, content_type: Optional[str] = None) -> s
     if not content_type:
         content_type = "application/octet-stream"
     s3 = _s3_client()
-    s3.put_object(Bucket=bucket, Key=key, Body=data, ContentType=content_type, ACL="public-read")
+    # Remove ACL parameter - bucket must have public access policy or Block Public Access disabled
+    s3.put_object(Bucket=bucket, Key=key, Body=data, ContentType=content_type)
     return _public_url(bucket, key)
 
 
