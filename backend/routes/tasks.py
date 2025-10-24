@@ -136,28 +136,54 @@ def update_task_content(task_id: int, payload: TaskContentUpdate, db: Session = 
 class AutoPlanRequest(BaseModel):
     blogger_id: int
     year: int
-    month: int  # 0-based (JS style) or 1-based? We'll accept 1-12 and normalize
-    content_type: Optional[str] = "video"
+    month: int  # 1-12
 
 
 @router.post("/plan/auto")
-def auto_plan(req: AutoPlanRequest):
+def auto_plan(req: AutoPlanRequest, db: Session = Depends(get_db)):
+    """
+    Generate content plan for a month based on blogger's content_frequency settings.
+    Distributes content types across weeks intelligently.
+    """
+    # Fetch blogger to get content_frequency
+    blogger = db.query(models.Blogger).get(req.blogger_id)
+    if not blogger:
+        raise HTTPException(status_code=404, detail="Blogger not found")
+    
     # Build all days for given month
-    m = req.month - 1 if req.month >= 1 else req.month
     from datetime import date, timedelta
-
+    m = req.month - 1 if req.month >= 1 else req.month
     first = date(req.year, m + 1, 1)
     if m == 11:
         next_first = date(req.year + 1, 1, 1)
     else:
         next_first = date(req.year, m + 2, 1)
+    
     days: list[str] = []
     d = first
     while d < next_first:
         days.append(d.isoformat())
         d += timedelta(days=1)
-    job_id = enqueue(content_plan_worker.generate_plan, req.blogger_id, days, req.content_type or "video")
-    return {"queued": True, "job_id": job_id, "days": len(days)}
+    
+    # Queue worker with blogger context
+    job_id = enqueue(
+        content_plan_worker.generate_plan_smart,
+        req.blogger_id,
+        days,
+        blogger.content_frequency or {},
+        {
+            "type": blogger.type,
+            "theme": blogger.theme,
+            "tone": blogger.tone_of_voice,
+            "name": blogger.name,
+        }
+    )
+    
+    return {
+        "queued": True,
+        "job_id": job_id,
+        "tasks_planned": len(days),  # Will be adjusted by worker based on frequency
+    }
 
 
 @router.delete("/{task_id}")
