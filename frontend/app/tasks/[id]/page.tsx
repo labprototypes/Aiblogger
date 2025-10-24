@@ -2,6 +2,8 @@ import { api, TASK_STATUSES } from "../../../lib/api";
 import TaskLive from "./TaskLive";
 import TaskEdit from "./TaskEdit";
 import TaskMeta from "./TaskMeta";
+// DeleteButton removed: use server action form instead to avoid passing handlers to client components
+import { redirect } from "next/navigation";
 
 export default async function TaskPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -27,6 +29,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   async function remove() {
     'use server'
     await api.tasks.delete(taskId);
+    redirect('/calendar');
   }
 
   return (
@@ -95,8 +98,8 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
 
       <div className="flex items-center justify-between">
         <a className="text-sm text-gray-400 hover:text-gray-200" href="/calendar">← Назад в календарь</a>
-        <form action={remove}>
-          <button className="text-red-400 hover:text-red-300 text-sm" onClick={() => { if (!confirm('Удалить задачу?')) throw new Error('cancel'); }}>
+        <form action={remove} method="post">
+          <button type="submit" className="text-red-400 hover:text-red-300 text-sm">
             Удалить задачу
           </button>
         </form>
