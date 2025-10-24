@@ -28,6 +28,7 @@ const contentTypeIcons: Record<string, string> = {
   story: "📸",
   short: "▶️",
   video: "🎥",
+  carousel: "🖼️",
 };
 
 export default async function CalendarPage({ searchParams }: { searchParams: Promise<{ y?: string; m?: string; blogger?: string }> }) {
