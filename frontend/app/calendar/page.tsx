@@ -1,6 +1,7 @@
 import { api } from "../../lib/api";
 import Controls from "./Controls";
 import BloggerFilter from "./BloggerFilter";
+import AutoPlanButton from "./AutoPlanButton";
 
 function getMonthDays(year: number, monthIndex: number) {
   const first = new Date(year, monthIndex, 1);
@@ -68,18 +69,12 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           <BloggerFilter bloggers={bloggers} bloggerId={bloggerId} y={y} m={m} />
           <div className="text-sm text-gray-400">Всего задач: {tasks.length}</div>
           <Controls />
-          <form
-            action={async () => {
-              'use server'
-              if (!bloggerId && bloggers[0]?.id) {
-                await api.tasks.autoPlan(bloggers[0].id, shown.getFullYear(), shown.getMonth() + 1);
-              } else if (bloggerId) {
-                await api.tasks.autoPlan(bloggerId, shown.getFullYear(), shown.getMonth() + 1);
-              }
-            }}
-          >
-            <button className="pill">Автоплан</button>
-          </form>
+          <AutoPlanButton 
+            bloggerId={bloggerId} 
+            bloggers={bloggers} 
+            year={y} 
+            month={m} 
+          />
         </div>
       </div>
       <div className="grid grid-cols-7 gap-2">

@@ -1,19 +1,27 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
 import { api } from "../../../lib/api";
+import ImageUpload from "../../../components/ImageUpload";
 
 export default function EditForm({ id }: { id: number }) {
+  const [blogger, setBlogger] = useState<any>(null);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
-  const [image, setImage] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [locations, setLocations] = useState<string[]>([]);
   const [theme, setTheme] = useState("");
   const [tone, setTone] = useState("");
   const [voiceId, setVoiceId] = useState("");
-  const [contentTypes, setContentTypes] = useState("");
-  const [contentSchedule, setContentSchedule] = useState("");
+  const [editingTypesEnabled, setEditingTypesEnabled] = useState<string[]>([]);
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState(0);
+  const [contentFrequency, setContentFrequency] = useState<Record<string, number>>({});
+  
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  const isPodcaster = type === "podcaster";
+  const maxLocations = isPodcaster ? 2 : 5;
 
   useEffect(() => {
     let alive = true;
