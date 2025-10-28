@@ -38,6 +38,7 @@ export type Blogger = {
   voice_id?: string | null;
   content_schedule?: Record<string, any> | null;
   content_types?: Record<string, any> | null;
+  locations?: Array<{ title: string; description: string; thumbnail?: string }> | null;
 };
 
 export type Task = {
@@ -49,6 +50,12 @@ export type Task = {
   status: string;
   script?: string | null;
   preview_url?: string | null;
+  location_id?: number | null;
+  location_description?: string | null;
+  outfit?: Record<string, any> | null;
+  main_image_url?: string | null;
+  prompts?: Record<string, any> | null;
+  generated_images?: Record<string, any> | null;
 };
 
 export const api = {
@@ -86,6 +93,15 @@ export const api = {
     updateContent: (task_id: number, data: { idea?: string; script?: string }) => request(`/api/tasks/${task_id}/content`, { method: "PUT", body: JSON.stringify(data) }),
     autoPlan: (blogger_id: number, year: number, month: number) => request<{ queued: boolean; job_id: string; tasks_planned: number }>(`/api/tasks/plan/auto`, { method: "POST", body: JSON.stringify({ blogger_id, year, month }) }),
     delete: (task_id: number) => request<{ ok: boolean }>(`/api/tasks/${task_id}`, { method: "DELETE" }),
+    // Fashion generation endpoints
+    updateFashionSetup: (task_id: number, data: { location_id?: number | null; location_description?: string | null; outfit?: Record<string, any> | null }) =>
+      request<Task>(`/api/tasks/${task_id}/fashion/setup`, { method: "PATCH", body: JSON.stringify(data) }),
+    generateMainFrame: (task_id: number, data: { prompt?: string; custom_instructions?: string }) =>
+      request<{ image_url: string; prompt: string; task_id: number }>(`/api/tasks/${task_id}/fashion/generate-main-frame`, { method: "POST", body: JSON.stringify(data) }),
+    approveFrame: (task_id: number, frame_type: string) =>
+      request<{ ok: boolean; approved: string }>(`/api/tasks/${task_id}/fashion/approve-frame`, { method: "POST", body: JSON.stringify({ frame_type }) }),
+    generateAdditionalFrames: (task_id: number, base_prompt?: string) =>
+      request<{ frames: Array<{ angle: string; image_url: string; prompt: string }>; task_id: number }>(`/api/tasks/${task_id}/fashion/generate-additional-frames`, { method: "POST", body: JSON.stringify({ base_prompt }) }),
   },
   assistant: {
     generateMeta: (task_id: number) => request<{ ok: boolean; task_id: number }>(`/api/assistant/meta/generate`, { method: "POST", body: JSON.stringify({ task_id }) }),

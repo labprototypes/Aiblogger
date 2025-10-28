@@ -194,3 +194,188 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.delete(task)
     db.commit()
     return {"ok": True}
+
+
+# Fashion Post Generation Endpoints
+
+class FashionSetupUpdate(BaseModel):
+    location_id: Optional[int] = None
+    location_description: Optional[str] = None
+    outfit: Optional[dict] = None
+
+
+@router.patch("/{task_id}/fashion/setup", response_model=TaskOut)
+def update_fashion_setup(task_id: int, payload: FashionSetupUpdate, db: Session = Depends(get_db)):
+    """Save location and outfit setup for fashion post"""
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    if payload.location_id is not None:
+        task.location_id = payload.location_id
+    if payload.location_description is not None:
+        task.location_description = payload.location_description
+    if payload.outfit is not None:
+        task.outfit = payload.outfit
+    
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+class MainFrameRequest(BaseModel):
+    prompt: Optional[str] = None
+    custom_instructions: Optional[str] = None
+
+
+@router.post("/{task_id}/fashion/generate-main-frame")
+def generate_main_frame(task_id: int, payload: MainFrameRequest, db: Session = Depends(get_db)):
+    """Generate the main full-height fashion frame with SDXL"""
+    from ..utils.image_generation import generate_fashion_frame
+    
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    blogger = db.query(models.Blogger).get(task.blogger_id)
+    if not blogger:
+        raise HTTPException(status_code=404, detail="Blogger not found")
+    
+    # Build context for prompt generation
+    location = None
+    if task.location_id is not None and blogger.locations:
+        location = blogger.locations[task.location_id] if task.location_id < len(blogger.locations) else None
+    elif task.location_description:
+        location = {"description": task.location_description}
+    
+    # Generate or use provided prompt
+    if not payload.prompt:
+        prompt = generate_text(f"""Create a detailed SDXL prompt for a fashion blogger main frame image.
+        
+Context:
+- Blogger: {blogger.name} ({blogger.theme})
+- Location: {location}
+- Outfit: {task.outfit}
+- Custom instructions: {payload.custom_instructions or 'N/A'}
+
+Generate a single detailed prompt for SDXL 4.0 that creates a full-height fashion photo.
+Include: pose, angle, lighting, mood. Keep under 200 tokens.
+Only return the prompt text, nothing else.""")
+    else:
+        # Use provided or edited prompt
+        prompt = payload.prompt
+        if payload.custom_instructions:
+            prompt = generate_text(f"""Update this SDXL prompt based on custom instructions:
+            
+Original prompt: {prompt}
+Custom instructions: {payload.custom_instructions}
+
+Return the updated prompt only.""")
+    
+    # Generate image with SDXL
+    image_url = generate_fashion_frame(prompt, aspect_ratio="9:16")
+    
+    # Store in generated_images history
+    if not task.generated_images:
+        task.generated_images = {}
+    if "main" not in task.generated_images:
+        task.generated_images["main"] = []
+    task.generated_images["main"].append(image_url)
+    
+    # Store prompt
+    if not task.prompts:
+        task.prompts = {}
+    task.prompts["main"] = prompt
+    
+    db.commit()
+    
+    return {
+        "image_url": image_url,
+        "prompt": prompt,
+        "task_id": task.id
+    }
+
+
+class ApproveFrameRequest(BaseModel):
+    frame_type: str  # "main", "angle1", "angle2", "angle3"
+
+
+@router.post("/{task_id}/fashion/approve-frame")
+def approve_frame(task_id: int, payload: ApproveFrameRequest, db: Session = Depends(get_db)):
+    """Approve a generated frame"""
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # For main frame, save to main_image_url
+    if payload.frame_type == "main":
+        if task.generated_images and "main" in task.generated_images and task.generated_images["main"]:
+            task.main_image_url = task.generated_images["main"][-1]  # Latest generated
+            task.status = "MAIN_FRAME_APPROVED"
+    
+    db.commit()
+    return {"ok": True, "approved": payload.frame_type}
+
+
+class AdditionalFramesRequest(BaseModel):
+    base_prompt: Optional[str] = None
+
+
+@router.post("/{task_id}/fashion/generate-additional-frames")
+def generate_additional_frames(task_id: int, payload: AdditionalFramesRequest, db: Session = Depends(get_db)):
+    """Generate 3 additional angle variations based on approved main frame"""
+    from ..utils.image_generation import generate_fashion_frame
+    
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    if not task.main_image_url:
+        raise HTTPException(status_code=400, detail="Main frame must be approved first")
+    
+    base_prompt = payload.base_prompt or task.prompts.get("main") if task.prompts else ""
+    
+    # Define 3 angles
+    angles = [
+        "close-up shot focusing on upper body and face, same outfit and location",
+        "medium shot from waist up, slightly angled to the side",
+        "detail shot focusing on outfit accessories and styling details"
+    ]
+    
+    results = []
+    for i, angle_desc in enumerate(angles, 1):
+        angle_key = f"angle{i}"
+        
+        # Generate prompt with angle variation
+        prompt = generate_text(f"""Create an SDXL prompt variation for angle {i}.
+
+Base prompt: {base_prompt}
+Angle description: {angle_desc}
+
+Keep same style, lighting, location. Only change: {angle_desc}
+Return updated prompt only.""")
+        
+        # Generate image
+        image_url = generate_fashion_frame(prompt, aspect_ratio="4:5")
+        
+        # Store
+        if angle_key not in task.generated_images:
+            task.generated_images[angle_key] = []
+        task.generated_images[angle_key].append(image_url)
+        
+        if not task.prompts:
+            task.prompts = {}
+        task.prompts[angle_key] = prompt
+        
+        results.append({
+            "angle": angle_key,
+            "image_url": image_url,
+            "prompt": prompt
+        })
+    
+    db.commit()
+    
+    return {
+        "frames": results,
+        "task_id": task.id
+    }

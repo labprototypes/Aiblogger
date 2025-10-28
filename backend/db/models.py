@@ -41,6 +41,14 @@ class ContentTask(Base):
     script = Column(Text)
     preview_url = Column(String(1024))
     editing_type = Column(String(50))  # Selected editing type for this specific task
+    
+    # Fashion post generation fields
+    location_id = Column(Integer)  # Index of location from blogger.locations array
+    location_description = Column(Text)  # Custom location description if not using pre-loaded
+    outfit = Column(JSON)  # {"top": "url", "bottom": "url", "shoes": "url", "socks": "url", "accessories": "url"} or text descriptions
+    main_image_url = Column(String(1024))  # Confirmed main frame URL
+    prompts = Column(JSON)  # {"main": "...", "angle1": "...", "angle2": "...", "angle3": "..."}
+    generated_images = Column(JSON)  # {"main": ["url1", "url2"], "angle1": ["url1"], ...} - history of generations
 
     blogger = relationship("Blogger", back_populates="tasks")
 

@@ -1,6 +1,11 @@
 # Aiblogger
 
-AI Blogger Studio (MVP)
+AI Blog## Features
+- Bloggers: list/create/edit/delete; extended fields (image, theme, tone_of_voice, voice_id, content_types, content_schedule, locations)
+- Calendar: month grid, prev/next nav, blogger filter, quick-add; inline status cycle, generate, delete; preview marker
+- Tasks: detail page, status change, delete, OpenAI-powered "Gen Script", generate (image worker)
+- **Fashion Posts**: Multi-step generation workflow for fashion bloggers with location selection, outfit builder, and SDXL 4.0 image generation (see [FASHION_FEATURE.md](FASHION_FEATURE.md))
+- Workers: RQ worker for image processing; script generation via OpenAI utilstudio (MVP)
 
 ## Quickstart
 - Create a `.env` from `.env.example` (or set env vars in Render).
