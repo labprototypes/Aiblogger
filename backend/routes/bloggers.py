@@ -16,10 +16,9 @@ class BloggerCreate(BaseModel):
     voice_id: Optional[str] = None
     content_schedule: Optional[dict] = None  # deprecated, keeping for backward compat
     content_types: Optional[dict] = None  # deprecated, keeping for backward compat
-    locations: Optional[list] = None  # list of location image URLs
+    locations: Optional[list] = None  # list of location objects with title, description, thumbnail
     editing_types_enabled: Optional[list] = None  # ["overlay", "rotoscope", "static"] - enabled options
     subtitles_enabled: Optional[int] = 0  # 1 or 0
-    content_frequency: Optional[dict] = None  # {"reels": 3, "post": 2, ...}
 
 
 class BloggerOut(BaseModel):
@@ -35,7 +34,6 @@ class BloggerOut(BaseModel):
     locations: Optional[list]
     editing_types_enabled: Optional[list]
     subtitles_enabled: Optional[int]
-    content_frequency: Optional[dict]
 
     class Config:
         from_attributes = True

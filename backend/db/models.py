@@ -17,10 +17,9 @@ class Blogger(Base):
     voice_id = Column(String(255))
     
     # New fields
-    locations = Column(JSON)  # [{url: "s3://...", type: "main"}]
+    locations = Column(JSON)  # [{title: "...", description: "...", thumbnail: "..."}]
     editing_types_enabled = Column(JSON)  # ["overlay", "rotoscope", "static"] - available options
     subtitles_enabled = Column(Integer, default=0)  # 0 or 1 (boolean)
-    content_frequency = Column(JSON)  # {"reels": 3, "post": 2} per week
     
     # Legacy fields (deprecated but kept for compatibility)
     content_schedule = Column(JSON)

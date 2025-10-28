@@ -1,7 +1,6 @@
 import { api } from "../../lib/api";
 import Controls from "./Controls";
 import BloggerFilter from "./BloggerFilter";
-import AutoPlanButton from "./AutoPlanButton";
 
 function getMonthDays(year: number, monthIndex: number) {
   const first = new Date(year, monthIndex, 1);
@@ -70,12 +69,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           <BloggerFilter bloggers={bloggers} bloggerId={bloggerId} y={y} m={m} />
           <div className="text-sm text-gray-400">Всего задач: {tasks.length}</div>
           <Controls />
-          <AutoPlanButton 
-            bloggerId={bloggerId} 
-            bloggers={bloggers} 
-            year={y} 
-            month={m} 
-          />
         </div>
       </div>
       <div className="grid grid-cols-7 gap-2">

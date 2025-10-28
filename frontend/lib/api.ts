@@ -91,7 +91,6 @@ export const api = {
     generate: (task_id: number) => request<{ queued: boolean; task_id: number; job_id: string }>(`/api/tasks/${task_id}/generate`, { method: "POST" }),
     generateScript: (task_id: number) => request<{ ok: boolean; task_id: number; status: string }>(`/api/tasks/${task_id}/script`, { method: "POST" }),
     updateContent: (task_id: number, data: { idea?: string; script?: string }) => request(`/api/tasks/${task_id}/content`, { method: "PUT", body: JSON.stringify(data) }),
-    autoPlan: (blogger_id: number, year: number, month: number) => request<{ queued: boolean; job_id: string; tasks_planned: number }>(`/api/tasks/plan/auto`, { method: "POST", body: JSON.stringify({ blogger_id, year, month }) }),
     delete: (task_id: number) => request<{ ok: boolean }>(`/api/tasks/${task_id}`, { method: "DELETE" }),
     // Fashion generation endpoints
     updateFashionSetup: (task_id: number, data: { location_id?: number | null; location_description?: string | null; outfit?: Record<string, any> | null }) =>

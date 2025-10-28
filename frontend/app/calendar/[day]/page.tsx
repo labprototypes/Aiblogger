@@ -1,4 +1,5 @@
 import { api, TASK_STATUSES } from "../../../lib/api";
+import AddTaskButton from "./AddTaskButton";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-700 text-gray-200",
@@ -20,7 +21,11 @@ export default async function DayPage({ params, searchParams }: { params: Promis
   const { day } = await params;
   const sp = await searchParams;
   const bloggerId = sp.blogger ? Number(sp.blogger) : undefined;
-  const tasks = await api.tasks.list({ blogger_id: bloggerId }).then(ts => ts.filter(t => t.date === day));
+  
+  const [tasks, bloggers] = await Promise.all([
+    api.tasks.list({ blogger_id: bloggerId }).then(ts => ts.filter(t => t.date === day)),
+    api.bloggers.list(),
+  ]);
 
   return (
     <main className="space-y-4">
@@ -29,7 +34,10 @@ export default async function DayPage({ params, searchParams }: { params: Promis
           <h1 className="text-2xl font-semibold">{new Date(day + 'T00:00').toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</h1>
           <p className="text-sm text-gray-400 mt-1">Задач на день: {tasks.length}</p>
         </div>
-        <a className="pill text-sm" href={`/calendar?y=${new Date(day).getFullYear()}&m=${new Date(day).getMonth()}${bloggerId?`&blogger=${bloggerId}`:''}`}>← Календарь</a>
+        <div className="flex items-center gap-3">
+          <AddTaskButton date={day} bloggerId={bloggerId} bloggers={bloggers} />
+          <a className="pill text-sm" href={`/calendar?y=${new Date(day).getFullYear()}&m=${new Date(day).getMonth()}${bloggerId?`&blogger=${bloggerId}`:''}`}>← Календарь</a>
+        </div>
       </div>
 
       {tasks.length === 0 && (
