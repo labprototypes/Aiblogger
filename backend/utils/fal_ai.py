@@ -42,3 +42,45 @@ def generate_video(prompt: str) -> str:
         if url:
             return url
     return "https://placehold.co/600x800?text=Video"
+
+
+def generate_talking_avatar(image_url: str, audio_url: str, prompt: str = "A person talking", num_frames: int = 145, resolution: str = "480p") -> dict:
+    """
+    Generate talking avatar video using InfiniTalk model from fal.ai
+    
+    Args:
+        image_url: URL of the input image (face/avatar)
+        audio_url: URL of the audio file to lip-sync to
+        prompt: Text prompt to guide video generation
+        num_frames: Number of frames (41-721), default 145
+        resolution: "480p" or "720p", default "480p"
+    
+    Returns:
+        dict with 'video_url' and 'seed' keys
+    """
+    payload = {
+        "image_url": image_url,
+        "audio_url": audio_url,
+        "prompt": prompt,
+        "num_frames": num_frames,
+        "resolution": resolution,
+        "acceleration": "regular"
+    }
+    
+    data = _fal_call("fal-ai/infinitalk", payload)
+    
+    if data and isinstance(data, dict):
+        # InfiniTalk returns: {"video": {"url": "...", "file_size": ..., ...}, "seed": ...}
+        video_info = data.get("video", {})
+        video_url = video_info.get("url") if isinstance(video_info, dict) else None
+        seed = data.get("seed")
+        
+        if video_url:
+            return {
+                "video_url": video_url,
+                "seed": seed,
+                "file_size": video_info.get("file_size"),
+                "file_name": video_info.get("file_name")
+            }
+    
+    raise Exception("Failed to generate talking avatar video")

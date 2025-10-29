@@ -115,13 +115,64 @@ def generate_script(task_id: int, db: Session = Depends(get_db)):
     task = db.query(models.ContentTask).get(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    prompt = task.idea or f"Create a short content script for {task.content_type} on {task.date}"
-    script = generate_text(prompt)
-    task.script = script
-    task.status = "SETUP_READY"  # Script готов, можно генерировать контент
+    
+    blogger = db.query(models.Blogger).get(task.blogger_id)
+    if not blogger:
+        raise HTTPException(status_code=404, detail="Blogger not found")
+    
+    # Generate full script based on idea and blogger info
+    prompt = f"""Create a detailed content script for a {blogger.type} blogger.
+
+Blogger: {blogger.name}
+Theme: {blogger.theme or 'general'}
+Tone: {blogger.tone_of_voice or 'friendly and engaging'}
+Content Type: {task.content_type}
+Idea: {task.idea or 'Create engaging content'}
+Date: {task.date}
+
+For podcaster type, create:
+1. Full script with all dialogue, descriptions, and notes
+2. Extract ONLY the voiceover text (what will be spoken) - clean text without any markers or descriptions
+
+Return in JSON format:
+{{
+  "full_script": "Complete script with descriptions...",
+  "voiceover_text": "Only the spoken text..."
+}}
+"""
+    
+    result = generate_text(prompt)
+    
+    # Try to parse as JSON, fallback to treating as plain script
+    try:
+        import json
+        parsed = json.loads(result)
+        full_script = parsed.get("full_script", result)
+        voiceover_text = parsed.get("voiceover_text", full_script)
+    except:
+        # If not JSON, use as-is
+        full_script = result
+        voiceover_text = result
+    
+    task.script = full_script
+    
+    # Store voiceover text in prompts for podcaster
+    if blogger.type == "podcaster":
+        if not task.prompts:
+            task.prompts = {}
+        task.prompts["voiceover_text"] = voiceover_text
+    
+    task.status = "SETUP_READY"  # Script готов, можно настраивать
     db.commit()
     db.refresh(task)
-    return {"ok": True, "task_id": task.id, "status": task.status}
+    
+    return {
+        "ok": True,
+        "task_id": task.id,
+        "status": task.status,
+        "full_script": full_script,
+        "voiceover_text": voiceover_text if blogger.type == "podcaster" else None
+    }
 
 
 class TaskContentUpdate(BaseModel):
@@ -502,31 +553,55 @@ class LipsyncGenerationRequest(BaseModel):
 
 @router.post("/{task_id}/podcaster/generate-lipsync")
 def generate_lipsync(task_id: int, payload: LipsyncGenerationRequest, db: Session = Depends(get_db)):
-    """Generate lip-sync video from audio and image/frames"""
+    """Generate lip-sync video from audio and image using InfiniTalk (fal.ai)"""
+    from ..utils.fal_ai import generate_talking_avatar
+    
     task = db.query(models.ContentTask).get(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
     try:
-        # Enqueue lip-sync generation job (will use Hedra or Sync Labs in worker)
-        job = enqueue(
-            "lipsync_generation",
-            task_id=task.id,
-            audio_url=payload.audio_url,
+        # Generate talking avatar with InfiniTalk
+        # Use higher frame count for longer audio (up to 721 frames)
+        num_frames = 145  # Default, ~6 seconds at 24fps
+        
+        # Build prompt for video generation
+        blogger = db.query(models.Blogger).get(task.blogger_id)
+        prompt = f"A person talking naturally"
+        if blogger:
+            if blogger.theme:
+                prompt = f"A {blogger.theme} content creator talking naturally"
+            if task.prompts and task.prompts.get("selected_location"):
+                location = task.prompts["selected_location"]
+                if location.get("prompt"):
+                    prompt = location["prompt"] + ", person talking"
+        
+        result = generate_talking_avatar(
             image_url=payload.image_url,
-            frames=payload.frames or []
+            audio_url=payload.audio_url,
+            prompt=prompt,
+            num_frames=num_frames,
+            resolution="720p"  # Higher quality
         )
         
-        # For now, return placeholder - actual implementation will use Hedra/Sync Labs API
-        # This will be processed by a worker and update task.preview_url when complete
-        task.status = "GENERATING"
+        video_url = result["video_url"]
+        
+        # Store video URL
+        if not task.generated_images:
+            task.generated_images = {}
+        task.generated_images["lipsync_video_url"] = video_url
+        task.generated_images["lipsync_seed"] = result.get("seed")
+        
+        # Update task status and preview URL
+        task.preview_url = video_url
+        task.status = "REVIEW"  # Ready for review
+        
         db.commit()
         
         return {
-            "video_url": None,  # Will be filled by worker
+            "video_url": video_url,
             "task_id": task.id,
-            "job_id": job.id,
-            "message": "Lip-sync generation started. This may take several minutes."
+            "seed": result.get("seed")
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lipsync generation failed: {str(e)}")
