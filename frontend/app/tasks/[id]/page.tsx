@@ -3,6 +3,7 @@ import TaskLive from "./TaskLive";
 import TaskEdit from "./TaskEdit";
 import TaskMeta from "./TaskMeta";
 import FashionPostTask from "./FashionPostTask";
+import PodcasterTask from "./PodcasterTask";
 // DeleteButton removed: use server action form instead to avoid passing handlers to client components
 import { redirect } from "next/navigation";
 
@@ -12,12 +13,18 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const task = await api.tasks.get(taskId);
   const blogger = await api.bloggers.get(task.blogger_id);
 
-  // Check if this is a fashion blogger with post content type
+  // Check blogger type and route to appropriate component
   const isFashionPost = blogger.type === "fashion" && task.content_type === "post";
+  const isPodcaster = blogger.type === "podcaster";
 
   if (isFashionPost) {
     // Render special fashion post interface
     return <FashionPostTask task={task} blogger={blogger} />;
+  }
+
+  if (isPodcaster) {
+    // Render podcaster interface
+    return <PodcasterTask task={task} blogger={blogger} />;
   }
 
   async function setStatus(formData: FormData) {

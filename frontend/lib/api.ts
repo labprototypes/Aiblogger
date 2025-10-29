@@ -111,6 +111,13 @@ export const api = {
       request<{ ok: boolean; approved: string }>(`/api/tasks/${task_id}/fashion/approve-frame`, { method: "POST", body: JSON.stringify({ frame_type }) }),
     generateAdditionalFrames: (task_id: number, base_prompt?: string) =>
       request<{ frames: Array<{ angle: string; image_url: string; prompt: string }>; task_id: number }>(`/api/tasks/${task_id}/fashion/generate-additional-frames`, { method: "POST", body: JSON.stringify({ base_prompt }) }),
+    // Podcaster generation endpoints
+    updatePodcasterSetup: (task_id: number, data: { selected_location?: any; selected_frames?: any[]; script?: string }) =>
+      request<Task>(`/api/tasks/${task_id}/podcaster/setup`, { method: "PATCH", body: JSON.stringify(data) }),
+    generateAudio: (task_id: number, data: { script: string; voice_id: string }) =>
+      request<{ audio_url: string; task_id: number }>(`/api/tasks/${task_id}/podcaster/generate-audio`, { method: "POST", body: JSON.stringify(data) }),
+    generateLipsync: (task_id: number, data: { audio_url: string; image_url: string; frames?: any[] }) =>
+      request<{ video_url: string; task_id: number }>(`/api/tasks/${task_id}/podcaster/generate-lipsync`, { method: "POST", body: JSON.stringify(data) }),
   },
   assistant: {
     generateMeta: (task_id: number) => request<{ ok: boolean; task_id: number }>(`/api/assistant/meta/generate`, { method: "POST", body: JSON.stringify({ task_id }) }),

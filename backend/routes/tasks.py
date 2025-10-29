@@ -426,3 +426,107 @@ def get_task_stats(db: Session = Depends(get_db)):
         "tasks_over_time": tasks_over_time,
         "tasks_by_blogger": tasks_by_blogger
     }
+
+
+# ===== Podcaster Endpoints =====
+
+class PodcasterSetupUpdate(BaseModel):
+    selected_location: Optional[dict] = None
+    selected_frames: Optional[list] = None
+    script: Optional[str] = None
+
+
+@router.patch("/{task_id}/podcaster/setup", response_model=TaskOut)
+def update_podcaster_setup(task_id: int, payload: PodcasterSetupUpdate, db: Session = Depends(get_db)):
+    """Save location, frames, and script for podcaster task"""
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    if payload.selected_location is not None:
+        if not task.prompts:
+            task.prompts = {}
+        task.prompts["selected_location"] = payload.selected_location
+    
+    if payload.selected_frames is not None:
+        if not task.prompts:
+            task.prompts = {}
+        task.prompts["selected_frames"] = payload.selected_frames
+    
+    if payload.script is not None:
+        task.script = payload.script
+    
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+class AudioGenerationRequest(BaseModel):
+    script: str
+    voice_id: str
+
+
+@router.post("/{task_id}/podcaster/generate-audio")
+def generate_audio(task_id: int, payload: AudioGenerationRequest, db: Session = Depends(get_db)):
+    """Generate audio from script using ElevenLabs"""
+    from ..utils.eleven_labs import generate_audio_elevenlabs
+    
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    try:
+        # Generate audio with ElevenLabs
+        audio_url = generate_audio_elevenlabs(payload.script, payload.voice_id)
+        
+        # Store audio URL
+        if not task.generated_images:
+            task.generated_images = {}
+        task.generated_images["audio_url"] = audio_url
+        
+        db.commit()
+        
+        return {
+            "audio_url": audio_url,
+            "task_id": task.id
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Audio generation failed: {str(e)}")
+
+
+class LipsyncGenerationRequest(BaseModel):
+    audio_url: str
+    image_url: str
+    frames: Optional[list] = None
+
+
+@router.post("/{task_id}/podcaster/generate-lipsync")
+def generate_lipsync(task_id: int, payload: LipsyncGenerationRequest, db: Session = Depends(get_db)):
+    """Generate lip-sync video from audio and image/frames"""
+    task = db.query(models.ContentTask).get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    try:
+        # Enqueue lip-sync generation job (will use Hedra or Sync Labs in worker)
+        job = enqueue(
+            "lipsync_generation",
+            task_id=task.id,
+            audio_url=payload.audio_url,
+            image_url=payload.image_url,
+            frames=payload.frames or []
+        )
+        
+        # For now, return placeholder - actual implementation will use Hedra/Sync Labs API
+        # This will be processed by a worker and update task.preview_url when complete
+        task.status = "GENERATING"
+        db.commit()
+        
+        return {
+            "video_url": None,  # Will be filled by worker
+            "task_id": task.id,
+            "job_id": job.id,
+            "message": "Lip-sync generation started. This may take several minutes."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lipsync generation failed: {str(e)}")
