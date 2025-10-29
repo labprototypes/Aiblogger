@@ -24,16 +24,20 @@ def enhance_prompt_with_gpt(user_prompt: str, mode: str = "location") -> str:
     if mode == "location":
         system_prompt = """Ты эксперт по генерации промптов для AI image generation (Seedream v4 edit mode).
 
-Пользователь даст краткое описание локации/стиля для персонажа. Твоя задача:
+Пользователь даст краткое описание ракурса/сцены для персонажа. Твоя задача:
 1. Расширить это в детальный промпт для модели
-2. Описать полное тело персонажа (full body portrait)
-3. Добавить детали одежды, позы, освещения, окружения
+2. Описать персонажа В ТОЧНОСТИ как указал пользователь (если сидит - сидит, если стоит - стоит, если крупный план - крупный план)
+3. Добавить детали одежды, позы, освещения, окружения СООТВЕТСТВУЮЩИЕ описанию
 4. Сохранить лицо и черты персонажа (модель работает в edit mode с референсным фото лица)
 5. Промпт на английском, профессиональный стиль
+6. НЕ добавляй "full body portrait" если пользователь не указал это явно
 
-Пример:
-Вход: "в кафе, casual стиль"
-Выход: "Full body portrait of a person in a modern cozy cafe, wearing casual business attire - fitted jeans and stylish sweater, standing confidently near a wooden table, natural daylight from large windows, warm ambient lighting, professional photography, high quality, maintaining facial features"
+Примеры:
+Вход: "сидит в кафе"
+Выход: "A person sitting at a table in a modern cozy cafe, wearing casual attire, relaxed seated pose, natural daylight from windows, warm ambient lighting, professional photography, high quality, maintaining facial features"
+
+Вход: "крупный план лица, на улице"
+Выход: "Close-up portrait of a person outdoors, urban street background slightly blurred, natural daylight, cinematic lighting, professional photography, high quality, maintaining facial features"
 
 Верни ТОЛЬКО итоговый промпт, без объяснений."""
     else:  # frame
@@ -115,6 +119,24 @@ def generate_fashion_frame(
             print(f"[Seedream v4 Edit] Reference image: {reference_image[:80]}...")
             print(f"[Seedream v4 Edit] Original prompt: {prompt}")
             
+            # Upload reference image to FAL storage to avoid S3 CORS issues
+            try:
+                import requests
+                from io import BytesIO
+                
+                print(f"[FAL Storage] Downloading reference image from S3...")
+                img_response = requests.get(reference_image, timeout=30)
+                img_response.raise_for_status()
+                
+                print(f"[FAL Storage] Uploading to FAL storage...")
+                fal_image_url = fal_client.upload(BytesIO(img_response.content), "image/png")
+                print(f"[FAL Storage] Uploaded: {fal_image_url[:80]}...")
+                
+                reference_to_use = fal_image_url
+            except Exception as upload_error:
+                print(f"[FAL Storage] Upload failed, trying direct URL: {upload_error}")
+                reference_to_use = reference_image
+            
             # Enhance prompt with GPT
             enhanced_prompt = enhance_prompt_with_gpt(prompt, mode="location")
             
@@ -122,7 +144,7 @@ def generate_fashion_frame(
                 "fal-ai/bytedance/seedream/v4/edit",
                 arguments={
                     "prompt": enhanced_prompt,
-                    "image_urls": [reference_image],  # Face reference
+                    "image_urls": [reference_to_use],  # Face reference (from FAL storage)
                     "image_size": size,
                     "num_images": 1,
                     "enable_safety_checker": False,

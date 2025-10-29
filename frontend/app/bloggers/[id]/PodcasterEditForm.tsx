@@ -114,7 +114,7 @@ export default function PodcasterEditForm({ bloggerId, initialBlogger }: Props) 
       )}
 
       {activeTab === 1 && (
-        <PodcasterLocationsManager bloggerId={bloggerId} faceImage={faceImage} locations={locations} onLocationsChange={setLocations} />
+        <PodcasterLocationsManager bloggerId={bloggerId} faceImage={faceImage} locations={locations} onShotsChange={setLocations} />
       )}
 
       {activeTab === 2 && (
