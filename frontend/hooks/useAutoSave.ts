@@ -8,7 +8,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout | undefined>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const callbackRef = useRef(callback);
 
   // Update callback ref when callback changes
@@ -51,7 +51,7 @@ export function useAutoSave<T>(
   delay: number = 1000
 ): [(data: T) => void, string] {
   const [status, setStatus] = useState<'idle' | 'pending' | 'saving' | 'saved' | 'error'>('idle');
-  const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const debouncedSave = useDebouncedCallback(async (data: T) => {
     setStatus('saving');
