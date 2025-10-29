@@ -28,16 +28,19 @@ type Blogger = {
   name: string;
   type: string;
   locations?: Array<{title: string; description: string; thumbnail?: string}> | null;
+  outfits?: Array<{name: string; image_url: string; parts?: any}> | null;
 };
 
 export default function FashionPostTask({ task: initialTask, blogger }: { task: Task; blogger: Blogger }) {
   const [task, setTask] = useState(initialTask);
   const [activeTab, setActiveTab] = useState<"setup" | "generate">("setup");
   const [bloggerLocations, setBloggerLocations] = useState<Array<{title: string; description: string; thumbnail?: string}>>(blogger.locations || []);
+  const [bloggerOutfits, setBloggerOutfits] = useState<Array<{name: string; image_url: string; parts?: any}>>(blogger.outfits || []);
 
   // Setup state
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(task.location_id ?? null);
   const [locationDescription, setLocationDescription] = useState(task.location_description || "");
+  const [selectedOutfitId, setSelectedOutfitId] = useState<number | null>(null); // For preset outfits
   const [outfit, setOutfit] = useState(task.outfit || {});
 
   // Auto-save setup changes
@@ -74,6 +77,34 @@ export default function FashionPostTask({ task: initialTask, blogger }: { task: 
 
   const handleLocationCreated = (newLocation: {title: string; description: string; thumbnail?: string}) => {
     setBloggerLocations(prev => [...prev, newLocation]);
+  };
+
+  const handleOutfitCreated = (newOutfit: {name: string; image_url: string; parts?: any}) => {
+    setBloggerOutfits(prev => [...prev, newOutfit]);
+  };
+
+  const handleOutfitSelect = (presetId: number | null) => {
+    setSelectedOutfitId(presetId);
+    if (presetId !== null && bloggerOutfits[presetId]) {
+      // Convert preset outfit parts to custom outfit format
+      const preset = bloggerOutfits[presetId];
+      const customOutfit: any = {};
+      
+      if (preset.parts?.top) {
+        customOutfit.top = { type: "image" as const, value: preset.parts.top };
+      }
+      if (preset.parts?.bottom) {
+        customOutfit.bottom = { type: "image" as const, value: preset.parts.bottom };
+      }
+      if (preset.parts?.shoes) {
+        customOutfit.shoes = { type: "image" as const, value: preset.parts.shoes };
+      }
+      if (preset.parts?.accessories) {
+        customOutfit.accessories = { type: "image" as const, value: preset.parts.accessories };
+      }
+      
+      setOutfit(customOutfit);
+    }
   };
 
   const handleGenerate = async (type: "main" | "additional") => {
@@ -221,7 +252,15 @@ export default function FashionPostTask({ task: initialTask, blogger }: { task: 
           {/* Outfit */}
           <div className="card p-6">
             <h3 className="text-lg font-semibold mb-4">Образ</h3>
-            <OutfitBuilder outfit={outfit} onChange={setOutfit} />
+            <OutfitBuilder 
+              bloggerId={blogger.id}
+              bloggerOutfits={bloggerOutfits}
+              outfit={outfit} 
+              selectedPresetId={selectedOutfitId}
+              onChange={setOutfit}
+              onPresetSelect={handleOutfitSelect}
+              onOutfitCreated={handleOutfitCreated}
+            />
           </div>
 
           {/* Actions */}
