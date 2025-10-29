@@ -62,7 +62,53 @@ AWS_REGION=us-east-1             # S3 region
 
 ### 🔜 Next Steps (Phase 2)
 
-- [ ] Unified status system (DRAFT → SETUP_READY → GENERATING → REVIEW → APPROVED)
+- [x] Unified status system (DRAFT → SETUP_READY → GENERATING → REVIEW → APPROVED → PUBLISHED)
 - [ ] Fashion worker for background generation
 - [ ] Auto-save in forms
 - [ ] Cleanup legacy code (content_plan_worker, generation.py)
+
+## [2024-10-29] - Phase 2: Status System Unification
+
+### 🔄 Changed
+
+**1. Unified Task Status System**
+- ✅ Replaced old statuses: PLANNED, SCRIPT_READY, VISUAL_READY, MAIN_FRAME_APPROVED
+- ✅ New unified flow: DRAFT → SETUP_READY → GENERATING → REVIEW → APPROVED → PUBLISHED
+- ✅ Updated all workers to use REVIEW instead of VISUAL_READY
+- ✅ Frontend status colors updated across calendar, task views
+- ✅ Backend routes updated for new status transitions
+
+**2. Status Workflow by Content Type**
+
+**Fashion Posts:**
+- DRAFT (created) → SETUP_READY (location+outfit configured) → GENERATING (frames generating) → REVIEW (awaiting approval) → APPROVED
+
+**Podcaster Video/Audio:**
+- DRAFT (created) → SETUP_READY (script generated) → GENERATING (worker processing) → REVIEW (content ready) → APPROVED
+
+**3. Migration**
+- Created `migrations/migrate_statuses.sql` for database migration
+- PLANNED → DRAFT
+- SCRIPT_READY → SETUP_READY  
+- VISUAL_READY, MAIN_FRAME_APPROVED → REVIEW
+
+### 📝 Technical Details
+
+**Modified Files:**
+- `backend/routes/tasks.py` - Updated status transitions
+- `backend/workers/*.py` - All workers now set REVIEW status
+- `frontend/lib/api.ts` - Updated TASK_STATUSES constant
+- `frontend/app/calendar/*.tsx` - New status colors
+- `docs/STATUS_SYSTEM.md` - Complete status documentation
+
+### 🎯 Impact
+
+**Before:**
+- 7 different statuses with unclear meanings
+- MAIN_FRAME_APPROVED specific to fashion
+- Confusing SCRIPT_READY vs VISUAL_READY
+
+**After:**
+- ✅ 6 clear statuses with universal meaning
+- ✅ Works for all content types
+- ✅ Clear progression: setup → generation → review → approval

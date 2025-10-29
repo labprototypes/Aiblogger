@@ -5,14 +5,15 @@ import { api, Task } from "../../lib/api";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-700 text-gray-200",
-  PLANNED: "bg-blue-700 text-blue-100",
-  SCRIPT_READY: "bg-yellow-700 text-yellow-100",
-  VISUAL_READY: "bg-purple-700 text-purple-100",
+  SETUP_READY: "bg-blue-700 text-blue-100",
+  GENERATING: "bg-yellow-700 text-yellow-100",
+  REVIEW: "bg-purple-700 text-purple-100",
   APPROVED: "bg-green-700 text-green-100",
+  PUBLISHED: "bg-emerald-700 text-emerald-100",
 };
 
 function nextStatus(cur: string) {
-  const order = ["DRAFT", "PLANNED", "SCRIPT_READY", "VISUAL_READY", "APPROVED"] as const;
+  const order = ["DRAFT", "SETUP_READY", "GENERATING", "REVIEW", "APPROVED", "PUBLISHED"] as const;
   const i = order.indexOf(cur as any);
   return order[(i + 1) % order.length];
 }

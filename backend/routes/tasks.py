@@ -92,7 +92,7 @@ def trigger_generation(task_id: int, db: Session = Depends(get_db)):
         job_id = enqueue(process_voice, task.id, text=task.script or task.idea or "", voice_id=task.blogger.voice_id if hasattr(task.blogger, "voice_id") else None)
     else:
         job_id = enqueue(process_image, task.id)
-    task.status = "SCRIPT_READY"  # enqueued for visual generation
+    task.status = "GENERATING"  # Worker will update to REVIEW when done
     db.commit()
     return {"queued": True, "task_id": task.id, "job_id": job_id}
 
@@ -105,7 +105,7 @@ def generate_script(task_id: int, db: Session = Depends(get_db)):
     prompt = task.idea or f"Create a short content script for {task.content_type} on {task.date}"
     script = generate_text(prompt)
     task.script = script
-    task.status = "SCRIPT_READY"
+    task.status = "SETUP_READY"  # Script готов, можно генерировать контент
     db.commit()
     db.refresh(task)
     return {"ok": True, "task_id": task.id, "status": task.status}
@@ -269,7 +269,7 @@ def approve_frame(task_id: int, payload: ApproveFrameRequest, db: Session = Depe
     if payload.frame_type == "main":
         if task.generated_images and "main" in task.generated_images and task.generated_images["main"]:
             task.main_image_url = task.generated_images["main"][-1]  # Latest generated
-            task.status = "MAIN_FRAME_APPROVED"
+            task.status = "REVIEW"  # Main frame approved, still need angles
     
     db.commit()
     return {"ok": True, "approved": payload.frame_type}

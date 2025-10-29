@@ -22,6 +22,6 @@ def process_voice(task_id: int, text: str, voice_id: str | None = None):
                 task.preview_url = url
         else:
             task.preview_url = url
-        task.status = "VISUAL_READY"
+        task.status = "REVIEW"  # Generated, awaiting approval
         s.commit()
     return True

@@ -25,6 +25,6 @@ def process_video(task_id: int, prompt: str | None = None):
                 task.preview_url = url
         else:
             task.preview_url = url
-        task.status = "VISUAL_READY"
+        task.status = "REVIEW"  # Generated, awaiting approval
         s.commit()
     return True

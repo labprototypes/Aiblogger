@@ -14,11 +14,12 @@ function getMonthDays(year: number, monthIndex: number) {
 }
 
 const statusColors: Record<string, string> = {
-  DRAFT: "bg-gray-700 text-gray-200",
-  PLANNED: "bg-sky-700 text-sky-100",
-  SCRIPT_READY: "bg-amber-700 text-amber-100",
-  VISUAL_READY: "bg-violet-700 text-violet-100",
-  APPROVED: "bg-emerald-700 text-emerald-100",
+  DRAFT: "bg-gray-700 text-gray-100",
+  SETUP_READY: "bg-blue-700 text-blue-100",
+  GENERATING: "bg-yellow-700 text-yellow-100",
+  REVIEW: "bg-purple-700 text-purple-100",
+  APPROVED: "bg-green-700 text-green-100",
+  PUBLISHED: "bg-emerald-700 text-emerald-100",
 };
 
 const contentTypeIcons: Record<string, string> = {

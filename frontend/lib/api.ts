@@ -108,10 +108,12 @@ export const api = {
   },
 };
 
+// Task statuses (unified system)
 export const TASK_STATUSES = [
   "DRAFT",
-  "PLANNED",
-  "SCRIPT_READY",
-  "VISUAL_READY",
+  "SETUP_READY",
+  "GENERATING",
+  "REVIEW",
   "APPROVED",
+  "PUBLISHED"
 ] as const;
