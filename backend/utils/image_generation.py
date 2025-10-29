@@ -122,20 +122,23 @@ def generate_fashion_frame(
             # Upload reference image to FAL storage to avoid S3 CORS issues
             try:
                 import requests
-                from io import BytesIO
                 
                 print(f"[FAL Storage] Downloading reference image from S3...")
                 img_response = requests.get(reference_image, timeout=30)
                 img_response.raise_for_status()
                 
                 print(f"[FAL Storage] Uploading to FAL storage...")
-                fal_image_url = fal_client.upload(BytesIO(img_response.content), "image/png")
+                # FAL upload expects bytes, not BytesIO
+                fal_image_url = fal_client.upload(img_response.content, "image/png")
                 print(f"[FAL Storage] Uploaded: {fal_image_url[:80]}...")
                 
                 reference_to_use = fal_image_url
             except Exception as upload_error:
-                print(f"[FAL Storage] Upload failed, trying direct URL: {upload_error}")
-                reference_to_use = reference_image
+                print(f"[FAL Storage] Upload failed: {upload_error}")
+                import traceback
+                traceback.print_exc()
+                # If FAL upload fails, we can't use the image - raise error
+                raise Exception(f"Failed to upload reference image to FAL storage: {upload_error}")
             
             # Enhance prompt with GPT
             enhanced_prompt = enhance_prompt_with_gpt(prompt, mode="location")
