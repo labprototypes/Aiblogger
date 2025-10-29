@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { api } from "../../../lib/api";
-import FashionEditForm from "./FashionEditForm";
 import PodcasterEditForm from "./PodcasterEditForm";
 
 export default function EditForm({ id }: { id: number }) {
@@ -31,10 +30,5 @@ export default function EditForm({ id }: { id: number }) {
   if (error) return <div className="text-red-400 text-sm p-3 bg-red-500/10 rounded-lg">{error}</div>;
   if (!blogger) return <div className="text-red-400">Блогер не найден</div>;
 
-  // Route to appropriate form based on blogger type
-  if (blogger.type === "podcaster") {
-    return <PodcasterEditForm bloggerId={id} initialBlogger={blogger} />;
-  } else {
-    return <FashionEditForm id={id} initialBlogger={blogger} />;
-  }
+  return <PodcasterEditForm bloggerId={id} initialBlogger={blogger} />;
 }

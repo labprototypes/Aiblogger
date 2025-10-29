@@ -8,8 +8,7 @@ export function Header() {
       <nav className="text-sm text-gray-400 flex gap-5">
         <a href="/" className="hover:text-white">Главная</a>
         <a href="/bloggers" className="hover:text-white">Блогеры</a>
-        <a href="/calendar" className="hover:text-white">Календарь</a>
-        <a href="/dashboard" className="hover:text-white">📊 Dashboard</a>
+        <a href="/tasks" className="hover:text-white">� Задачи</a>
       </nav>
     </header>
   );

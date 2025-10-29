@@ -61,7 +61,14 @@ export type Task = {
 export const api = {
   bloggers: {
     list: () => request<Blogger[]>("/api/bloggers/"),
-    create: (data: { name: string; type: string }) =>
+    create: (data: { 
+      name: string; 
+      type: string;
+      image?: string;
+      tone_of_voice?: string;
+      theme?: string;
+      voice_id?: string;
+    }) =>
       request<Blogger>("/api/bloggers/", { method: "POST", body: JSON.stringify(data) }),
     get: (id: number) => request<Blogger>(`/api/bloggers/${id}`),
     update: (
