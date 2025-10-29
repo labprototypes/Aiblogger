@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routes.bloggers import router as bloggers_router
 from .routes.tasks import router as tasks_router
 from .routes.assistant import router as assistant_router
-from .routes.generation import router as generation_router
 from .routes.upload import router as upload_router
 
 from .db.connection import engine
@@ -50,5 +49,4 @@ def root():
 app.include_router(bloggers_router, prefix="/api/bloggers", tags=["bloggers"])
 app.include_router(tasks_router, prefix="/api/tasks", tags=["tasks"])
 app.include_router(assistant_router, prefix="/api/assistant", tags=["assistant"])
-app.include_router(generation_router, prefix="/api/generation", tags=["generation"])
 app.include_router(upload_router, prefix="/api/upload", tags=["upload"])

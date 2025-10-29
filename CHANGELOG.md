@@ -112,3 +112,67 @@ AWS_REGION=us-east-1             # S3 region
 - ✅ 6 clear statuses with universal meaning
 - ✅ Works for all content types
 - ✅ Clear progression: setup → generation → review → approval
+
+## [2024-10-29] - Phase 3: Cleanup & Auto-Save
+
+### 🗑️ Removed
+
+**1. Deprecated Code Cleanup**
+- ✅ Deleted `backend/workers/content_plan_worker.py` (autoplan feature removed)
+- ✅ Deleted `backend/routes/generation.py` (unused legacy endpoints)
+- ✅ Removed generation router from `main.py`
+- ✅ Cleaned up all imports and references
+
+**2. Legacy Features Removed**
+- PLANNED status (migrated to DRAFT)
+- Auto content plan generation
+- Unused /api/generation endpoints
+
+### ✨ Added
+
+**3. Auto-Save Infrastructure**
+- ✅ Created `hooks/useAutoSave.ts` with debounced save logic
+- ✅ `useDebouncedCallback` hook for general debouncing
+- ✅ `useAutoSave` hook with status indicator (idle/pending/saving/saved/error)
+- ✅ `SaveIndicator` component with status icons and animations
+- ✅ Ready for integration into EditForm and FashionPostTask
+
+**4. Save Status Indicators**
+- pending: "Есть изменения..." (gray)
+- saving: "Сохранение..." (blue, animated spinner)
+- saved: "Сохранено" (green, checkmark)
+- error: "Ошибка сохранения" (red, warning)
+
+### 📝 Technical Details
+
+**Deleted Files:**
+- `backend/workers/content_plan_worker.py`
+- `backend/routes/generation.py`
+
+**New Files:**
+- `frontend/hooks/useAutoSave.ts` (90 lines, 2 hooks)
+- `frontend/components/SaveIndicator.tsx` (visual feedback component)
+
+**Modified Files:**
+- `backend/main.py` - Removed generation router
+
+### 🎯 Impact
+
+**Before:**
+- Manual "Save" button required
+- Legacy code cluttering codebase
+- Unused autoplan worker still referenced
+
+**After:**
+- ✅ Auto-save ready for forms (1 second debounce)
+- ✅ Clean codebase, no legacy endpoints
+- ✅ Visual save status feedback
+- ✅ Reduced manual actions for users
+
+### 🔜 Next Steps (Phase 4)
+
+- [ ] Integrate auto-save into EditForm
+- [ ] Integrate auto-save into FashionPostTask setup tab
+- [ ] Fashion worker for background generation
+- [ ] Unified create task wizard
+- [ ] Inline location/outfit creation
