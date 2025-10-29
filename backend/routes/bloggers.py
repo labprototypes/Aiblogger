@@ -21,6 +21,10 @@ class BloggerCreate(BaseModel):
     outfits: Optional[list] = None  # list of outfit objects with name, image_url, parts
     editing_types_enabled: Optional[list] = None  # ["overlay", "rotoscope", "static"] - enabled options
     subtitles_enabled: Optional[int] = 0  # 1 or 0
+    # Podcaster-specific fields
+    face_image: Optional[str] = None
+    face_prompt: Optional[str] = None
+    animation_frames: Optional[list] = None
 
 
 class BloggerOut(BaseModel):
@@ -37,6 +41,10 @@ class BloggerOut(BaseModel):
     outfits: Optional[list]
     editing_types_enabled: Optional[list]
     subtitles_enabled: Optional[int]
+    # Podcaster-specific fields
+    face_image: Optional[str]
+    face_prompt: Optional[str]
+    animation_frames: Optional[list]
 
     class Config:
         from_attributes = True
@@ -243,3 +251,108 @@ def generate_outfit(blogger_id: int, payload: OutfitGenerate, db: Session = Depe
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+
+
+# Podcaster face generation
+class FaceGenerate(BaseModel):
+    prompt: str
+
+
+@router.post("/{blogger_id}/face/generate")
+def generate_podcaster_face(blogger_id: int, payload: FaceGenerate, db: Session = Depends(get_db)):
+    """Generate podcaster face using Seedream v4 (1:1, 4K quality)"""
+    blogger = db.query(models.Blogger).get(blogger_id)
+    if not blogger:
+        raise HTTPException(status_code=404, detail="Blogger not found")
+    
+    if blogger.type != "podcaster":
+        raise HTTPException(status_code=400, detail="This endpoint is only for podcaster bloggers")
+    
+    try:
+        # Generate face: 1:1 aspect ratio for square portrait
+        # Enhance prompt for high-quality face generation
+        enhanced_prompt = f"Professional portrait photography, {payload.prompt}, face focus, studio lighting, high quality, 4K resolution, sharp details, clear facial features"
+        
+        image_url = generate_fashion_frame(enhanced_prompt, "1:1")
+        
+        # Update blogger with generated face
+        blogger.face_image = image_url
+        blogger.face_prompt = payload.prompt
+        db.commit()
+        
+        return {
+            "image_url": image_url,
+            "prompt": payload.prompt
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Face generation failed: {str(e)}")
+
+
+# Podcaster location generation with face reference
+class LocationWithFaceGenerate(BaseModel):
+    face_image: str
+    prompt: str
+
+
+@router.post("/{blogger_id}/locations/generate-with-face")
+def generate_podcaster_location(blogger_id: int, payload: LocationWithFaceGenerate, db: Session = Depends(get_db)):
+    """Generate location with full body using face as reference (Seedream edit mode)"""
+    blogger = db.query(models.Blogger).get(blogger_id)
+    if not blogger:
+        raise HTTPException(status_code=404, detail="Blogger not found")
+    
+    if blogger.type != "podcaster":
+        raise HTTPException(status_code=400, detail="This endpoint is only for podcaster bloggers")
+    
+    try:
+        # Generate full body in location using face as reference
+        # Seedream edit mode will preserve face likeness
+        enhanced_prompt = f"Full body portrait, {payload.prompt}, maintaining facial features, professional photography, high quality"
+        
+        image_url = generate_fashion_frame(
+            enhanced_prompt, 
+            "3:4",  # Portrait aspect ratio for full body
+            reference_image=payload.face_image
+        )
+        
+        return {
+            "image_url": image_url,
+            "prompt": payload.prompt
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Location generation failed: {str(e)}")
+
+
+# Animation frame generation
+class FrameGenerate(BaseModel):
+    base_image: str
+    prompt: str
+
+
+@router.post("/{blogger_id}/frames/generate")
+def generate_animation_frame(blogger_id: int, payload: FrameGenerate, db: Session = Depends(get_db)):
+    """Generate animation frame variation from base image"""
+    blogger = db.query(models.Blogger).get(blogger_id)
+    if not blogger:
+        raise HTTPException(status_code=404, detail="Blogger not found")
+    
+    if blogger.type != "podcaster":
+        raise HTTPException(status_code=400, detail="This endpoint is only for podcaster bloggers")
+    
+    try:
+        # Generate frame variation using Seedream edit mode
+        # Keeps overall composition but applies emotion/pose changes
+        enhanced_prompt = f"Same person and location, {payload.prompt}, maintaining consistency, high quality"
+        
+        image_url = generate_fashion_frame(
+            enhanced_prompt,
+            "3:4",  # Same aspect ratio as base location
+            reference_image=payload.base_image
+        )
+        
+        return {
+            "image_url": image_url,
+            "prompt": payload.prompt
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Frame generation failed: {str(e)}")

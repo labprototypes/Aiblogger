@@ -22,6 +22,12 @@ class Blogger(Base):
     editing_types_enabled = Column(JSON)  # ["overlay", "rotoscope", "static"] - available options
     subtitles_enabled = Column(Integer, default=0)  # 0 or 1 (boolean)
     
+    # Podcaster-specific fields
+    face_image = Column(String(1024))  # Generated or uploaded face (1:1, 4K)
+    face_prompt = Column(Text)  # Prompt used to generate face
+    animation_frames = Column(JSON)  # [{id: "frame1", image_url: "...", prompt: "...", emotion: "..."}]
+    # locations for podcaster: [{title: "...", image_url: "...", prompt: "...", face_reference: "..."}]
+    
     # Legacy fields (deprecated but kept for compatibility)
     content_schedule = Column(JSON)
     content_types = Column(JSON)
