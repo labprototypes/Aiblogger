@@ -122,20 +122,41 @@ def generate_fashion_frame(
             
             # Upload reference image to FAL storage to avoid S3 CORS issues
             try:
-                import requests
+                import boto3
+                import re
                 
-                # Fix any old us-east-1 URLs to use correct us-east-2 region
-                corrected_url = reference_image.replace('.s3.us-east-1.amazonaws.com', '.s3.us-east-2.amazonaws.com')
-                if corrected_url != reference_image:
-                    print(f"[FAL Storage] Corrected S3 region: us-east-1 → us-east-2")
+                # Parse S3 URL to extract bucket and key
+                # Format: https://bucket.s3.region.amazonaws.com/key or https://bucket.s3.amazonaws.com/key
+                s3_pattern = r'https://([^.]+)\.s3\.(?:[^.]+\.)?amazonaws\.com/(.+)'
+                match = re.match(s3_pattern, reference_image)
                 
-                print(f"[FAL Storage] Downloading reference image from S3...")
-                img_response = requests.get(corrected_url, timeout=30)
-                img_response.raise_for_status()
+                if match:
+                    bucket_name = match.group(1)
+                    key = match.group(2)
+                    
+                    print(f"[FAL Storage] Downloading from S3: {bucket_name}/{key[:50]}...")
+                    
+                    # Use boto3 with credentials to download (works for private buckets)
+                    s3_client = boto3.client(
+                        's3',
+                        aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                        region_name=os.getenv('AWS_REGION', 'us-east-2')
+                    )
+                    
+                    response = s3_client.get_object(Bucket=bucket_name, Key=key)
+                    img_bytes = response['Body'].read()
+                else:
+                    # Not an S3 URL, download via HTTP
+                    import requests
+                    print(f"[FAL Storage] Downloading via HTTP...")
+                    img_response = requests.get(reference_image, timeout=30)
+                    img_response.raise_for_status()
+                    img_bytes = img_response.content
                 
-                print(f"[FAL Storage] Uploading to FAL storage...")
+                print(f"[FAL Storage] Uploading to FAL storage ({len(img_bytes)} bytes)...")
                 # FAL upload expects bytes, not BytesIO
-                fal_image_url = fal_client.upload(img_response.content, "image/png")
+                fal_image_url = fal_client.upload(img_bytes, "image/png")
                 print(f"[FAL Storage] Uploaded: {fal_image_url[:80]}...")
                 
                 reference_to_use = fal_image_url
