@@ -2,13 +2,16 @@
 import { useEffect, useState, useTransition } from "react";
 import { api } from "../../../lib/api";
 import ImageUpload from "../../../components/ImageUpload";
+import LocationsManager from "./LocationsManager";
+import OutfitsManager from "./OutfitsManager";
 
 export default function EditForm({ id }: { id: number }) {
   const [blogger, setBlogger] = useState<any>(null);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [locations, setLocations] = useState<string[]>([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [outfits, setOutfits] = useState<any[]>([]);
   const [theme, setTheme] = useState("");
   const [tone, setTone] = useState("");
   const [voiceId, setVoiceId] = useState("");
@@ -20,7 +23,7 @@ export default function EditForm({ id }: { id: number }) {
   const [error, setError] = useState<string | null>(null);
 
   const isPodcaster = type === "podcaster";
-  const maxLocations = isPodcaster ? 2 : 5;
+  const isFashion = type === "fashion";
 
   useEffect(() => {
     let alive = true;
@@ -33,6 +36,7 @@ export default function EditForm({ id }: { id: number }) {
         setType(b.type);
         setAvatarUrl((b as any).image || "");
         setLocations((b as any).locations || []);
+        setOutfits((b as any).outfits || []);
         setTheme((b as any).theme || "");
         setTone((b as any).tone_of_voice || "");
         setVoiceId((b as any).voice_id || "");
@@ -69,6 +73,8 @@ export default function EditForm({ id }: { id: number }) {
           image: avatarUrl || undefined,
           // @ts-ignore
           locations: locations.length > 0 ? locations : undefined,
+          // @ts-ignore
+          outfits: outfits.length > 0 ? outfits : undefined,
           // @ts-ignore
           theme: theme || undefined,
           // @ts-ignore
@@ -163,15 +169,28 @@ export default function EditForm({ id }: { id: number }) {
           onChange={(url) => setAvatarUrl(url as string)}
           multiple={false}
         />
-
-        <ImageUpload
-          label={`Локации съёмки (до ${maxLocations})`}
-          value={locations}
-          onChange={(urls) => setLocations(urls as string[])}
-          multiple={true}
-          maxFiles={maxLocations}
-        />
       </div>
+
+      {/* Fashion Locations & Outfits */}
+      {isFashion && (
+        <>
+          <div className="card p-6">
+            <LocationsManager 
+              bloggerId={id} 
+              locations={locations} 
+              onUpdate={setLocations} 
+            />
+          </div>
+
+          <div className="card p-6">
+            <OutfitsManager 
+              bloggerId={id} 
+              outfits={outfits} 
+              onUpdate={setOutfits} 
+            />
+          </div>
+        </>
+      )}
 
       {/* Editing Settings */}
       <div className="card p-6 space-y-4">

@@ -18,6 +18,7 @@ class Blogger(Base):
     
     # New fields
     locations = Column(JSON)  # [{title: "...", description: "...", thumbnail: "..."}]
+    outfits = Column(JSON)  # [{name: "...", image_url: "...", parts: {top: "url", bottom: "url", ...}}]
     editing_types_enabled = Column(JSON)  # ["overlay", "rotoscope", "static"] - available options
     subtitles_enabled = Column(Integer, default=0)  # 0 or 1 (boolean)
     

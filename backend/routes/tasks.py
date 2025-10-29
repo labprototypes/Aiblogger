@@ -218,8 +218,20 @@ Custom instructions: {payload.custom_instructions}
 
 Return the updated prompt only.""")
     
-    # Generate image with SDXL
-    image_url = generate_fashion_frame(prompt, aspect_ratio="9:16")
+    # Extract reference image from outfit if available
+    reference_image = None
+    if task.outfit:
+        # Check if outfit has any URL parts
+        for part_key in ["top", "bottom", "shoes", "accessories"]:
+            part_data = task.outfit.get(part_key, {})
+            if isinstance(part_data, dict) and part_data.get("type") == "url":
+                part_value = part_data.get("value", "")
+                if part_value and part_value.startswith("http"):
+                    reference_image = part_value
+                    break
+    
+    # Generate image with Seedream v4 (edit mode if reference_image, text-to-image otherwise)
+    image_url = generate_fashion_frame(prompt, aspect_ratio="9:16", reference_image=reference_image)
     
     # Store in generated_images history
     if not task.generated_images:
@@ -281,6 +293,9 @@ def generate_additional_frames(task_id: int, payload: AdditionalFramesRequest, d
     
     base_prompt = payload.base_prompt or task.prompts.get("main") if task.prompts else ""
     
+    # Use main frame as reference image for Seedream v4 edit mode
+    reference_image = task.main_image_url
+    
     # Define 3 angles
     angles = [
         "close-up shot focusing on upper body and face, same outfit and location",
@@ -301,8 +316,8 @@ Angle description: {angle_desc}
 Keep same style, lighting, location. Only change: {angle_desc}
 Return updated prompt only.""")
         
-        # Generate image
-        image_url = generate_fashion_frame(prompt, aspect_ratio="4:5")
+        # Generate image using main frame as reference (Seedream v4 edit mode)
+        image_url = generate_fashion_frame(prompt, aspect_ratio="4:5", reference_image=reference_image)
         
         # Store
         if angle_key not in task.generated_images:
