@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { API_BASE } from "../../../lib/api";
 
 type AnimationFrame = {
   id: string;
@@ -58,7 +59,7 @@ export default function AnimationFramesManager({
       const selectedLocation = locations.find((loc) => loc.id === selectedLocationId);
       if (!selectedLocation) throw new Error("Location not found");
 
-      const res = await fetch(`/api/bloggers/${bloggerId}/frames/generate`, {
+      const res = await fetch(`${API_BASE}/api/bloggers/${bloggerId}/frames/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
