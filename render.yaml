@@ -4,6 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r backend/requirements.txt
+    preDeployCommand: bash backend/migrations/run_migrations.sh
     startCommand: |
       bash -lc '
         if [ "$RUN_WORKER" = "1" ]; then
