@@ -1,6 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
+import { useAutoSave } from "../../../hooks/useAutoSave";
+import SaveIndicator from "../../../components/SaveIndicator";
 import LocationSelector from "./LocationSelector";
 import OutfitBuilder from "./OutfitBuilder";
 import FashionFrameGenerator from "./FashionFrameGenerator";
@@ -31,12 +33,30 @@ type Blogger = {
 export default function FashionPostTask({ task: initialTask, blogger }: { task: Task; blogger: Blogger }) {
   const [task, setTask] = useState(initialTask);
   const [activeTab, setActiveTab] = useState<"setup" | "generate">("setup");
-  const [saving, setSaving] = useState(false);
+  const [bloggerLocations, setBloggerLocations] = useState<Array<{title: string; description: string; thumbnail?: string}>>(blogger.locations || []);
 
   // Setup state
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(task.location_id ?? null);
   const [locationDescription, setLocationDescription] = useState(task.location_description || "");
   const [outfit, setOutfit] = useState(task.outfit || {});
+
+  // Auto-save setup changes
+  const saveSetup = async (data: { location_id: number | null; location_description: string; outfit: any }) => {
+    await api.tasks.updateFashionSetup(task.id, data);
+  };
+  
+  const [triggerSave, saveStatus] = useAutoSave(saveSetup, 1500) as [(data: any) => void, "idle" | "pending" | "saving" | "saved" | "error"];
+
+  // Trigger save on any setup field change
+  useEffect(() => {
+    if (activeTab === "setup") {
+      triggerSave({
+        location_id: selectedLocationId,
+        location_description: locationDescription,
+        outfit,
+      });
+    }
+  }, [selectedLocationId, locationDescription, outfit, activeTab, triggerSave]);
 
   // Generation state
   const [mainFrame, setMainFrame] = useState<{url: string; prompt: string; approved: boolean} | null>(
@@ -52,21 +72,8 @@ export default function FashionPostTask({ task: initialTask, blogger }: { task: 
     setLocationDescription(description);
   };
 
-  const handleSaveSetup = async () => {
-    setSaving(true);
-    try {
-      await api.tasks.updateFashionSetup(task.id, {
-        location_id: selectedLocationId,
-        location_description: locationDescription,
-        outfit,
-      });
-      setActiveTab("generate");
-    } catch (e) {
-      console.error("Error saving setup:", e);
-      alert("Ошибка сохранения");
-    } finally {
-      setSaving(false);
-    }
+  const handleLocationCreated = (newLocation: {title: string; description: string; thumbnail?: string}) => {
+    setBloggerLocations(prev => [...prev, newLocation]);
   };
 
   const handleGenerate = async (type: "main" | "additional") => {
@@ -202,10 +209,12 @@ export default function FashionPostTask({ task: initialTask, blogger }: { task: 
           <div className="card p-6">
             <h3 className="text-lg font-semibold mb-4">Локация съёмки</h3>
             <LocationSelector
-              bloggerLocations={blogger.locations || []}
+              bloggerId={blogger.id}
+              bloggerLocations={bloggerLocations}
               selectedLocationId={selectedLocationId}
               customLocationDescription={locationDescription}
               onChange={handleLocationChange}
+              onLocationCreated={handleLocationCreated}
             />
           </div>
 
@@ -216,13 +225,14 @@ export default function FashionPostTask({ task: initialTask, blogger }: { task: 
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-between items-center">
+            <SaveIndicator status={saveStatus} />
             <button
-              onClick={handleSaveSetup}
-              disabled={!setupComplete || saving}
+              onClick={() => setActiveTab("generate")}
+              disabled={!setupComplete}
               className="btn btn-primary disabled:opacity-50"
             >
-              {saving ? "Сохранение..." : "Продолжить к генерации →"}
+              Продолжить к генерации →
             </button>
           </div>
         </div>
