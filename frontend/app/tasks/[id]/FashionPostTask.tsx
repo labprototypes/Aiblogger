@@ -25,7 +25,7 @@ type Blogger = {
   id: number;
   name: string;
   type: string;
-  locations?: Array<{title: string; description: string; thumbnail?: string}>;
+  locations?: Array<{title: string; description: string; thumbnail?: string}> | null;
 };
 
 export default function FashionPostTask({ task: initialTask, blogger }: { task: Task; blogger: Blogger }) {
