@@ -3,13 +3,13 @@ import { useState } from "react";
 import ImageUpload from "../../../components/ImageUpload";
 
 type Location = {
-  id: number;
-  url: string;
-  description?: string;
+  title: string;
+  description: string;
+  thumbnail?: string;
 };
 
 type Props = {
-  bloggerLocations: string[]; // URLs from blogger.locations
+  bloggerLocations: Location[]; // Array of location objects
   selectedLocationId: number | null;
   customLocationDescription: string;
   onChange: (locationId: number | null, description: string) => void;
@@ -74,7 +74,7 @@ export default function LocationSelector({
               У блогера нет загруженных локаций. Используйте "Описать текстом" или "Загрузить новую"
             </div>
           ) : (
-            bloggerLocations.map((url, idx) => (
+            bloggerLocations.map((location, idx) => (
               <button
                 key={idx}
                 type="button"
@@ -85,9 +85,15 @@ export default function LocationSelector({
                     : "border-white/10 hover:border-white/30"
                 }`}
               >
-                <img src={url} alt={`Локация ${idx + 1}`} className="w-full aspect-square object-cover" />
+                {location.thumbnail ? (
+                  <img src={location.thumbnail} alt={location.title} className="w-full aspect-square object-cover" />
+                ) : (
+                  <div className="w-full aspect-square bg-white/5 flex items-center justify-center">
+                    <span className="text-4xl">📍</span>
+                  </div>
+                )}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                  <div className="text-xs font-medium text-white">Локация {idx + 1}</div>
+                  <div className="text-xs font-medium text-white">{location.title || `Локация ${idx + 1}`}</div>
                 </div>
                 {selectedLocationId === idx && (
                   <div className="absolute top-2 right-2 w-6 h-6 bg-lime-400 rounded-full flex items-center justify-center text-black text-xs font-bold">
