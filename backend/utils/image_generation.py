@@ -124,8 +124,13 @@ def generate_fashion_frame(
             try:
                 import requests
                 
+                # Fix any old us-east-1 URLs to use correct us-east-2 region
+                corrected_url = reference_image.replace('.s3.us-east-1.amazonaws.com', '.s3.us-east-2.amazonaws.com')
+                if corrected_url != reference_image:
+                    print(f"[FAL Storage] Corrected S3 region: us-east-1 → us-east-2")
+                
                 print(f"[FAL Storage] Downloading reference image from S3...")
-                img_response = requests.get(reference_image, timeout=30)
+                img_response = requests.get(corrected_url, timeout=30)
                 img_response.raise_for_status()
                 
                 print(f"[FAL Storage] Uploading to FAL storage...")
