@@ -305,21 +305,27 @@ def generate_podcaster_location(blogger_id: int, payload: LocationWithFaceGenera
         raise HTTPException(status_code=400, detail="This endpoint is only for podcaster bloggers")
     
     try:
-        # Generate full body in location using face as reference
-        # Seedream edit mode will preserve face likeness
-        enhanced_prompt = f"Full body portrait, {payload.prompt}, maintaining facial features, professional photography, high quality"
+        print(f"[Location Gen] Blogger: {blogger.name}, Prompt: {payload.prompt}")
+        print(f"[Location Gen] Face image: {payload.face_image[:80] if payload.face_image else 'None'}...")
         
+        # GPT will enhance the user's simple prompt into a detailed full-body portrait description
+        # No need to manually add "Full body portrait" here - GPT handles it
         image_url = generate_fashion_frame(
-            enhanced_prompt, 
+            payload.prompt,  # Pass user's original prompt to be enhanced by GPT
             "3:4",  # Portrait aspect ratio for full body
             reference_image=payload.face_image
         )
+        
+        print(f"[Location Gen] Success! URL: {image_url[:80]}...")
         
         return {
             "image_url": image_url,
             "prompt": payload.prompt
         }
     except Exception as e:
+        print(f"[Location Gen] ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Location generation failed: {str(e)}")
 
 
@@ -340,9 +346,13 @@ def generate_animation_frame(blogger_id: int, payload: FrameGenerate, db: Sessio
         raise HTTPException(status_code=400, detail="This endpoint is only for podcaster bloggers")
     
     try:
+        print(f"[Frame Gen] Blogger: {blogger.name}, Emotion/Prompt: {payload.prompt}")
+        print(f"[Frame Gen] Base image: {payload.base_image[:80]}...")
+        
         # Generate frame variation using Seedream edit mode
-        # Keeps overall composition but applies emotion/pose changes
-        enhanced_prompt = f"Same person and location, {payload.prompt}, maintaining consistency, high quality"
+        # GPT will enhance the prompt with "same location" context
+        from backend.utils.image_generation import enhance_prompt_with_gpt
+        enhanced_prompt = enhance_prompt_with_gpt(payload.prompt, mode="frame")
         
         image_url = generate_fashion_frame(
             enhanced_prompt,
@@ -350,9 +360,15 @@ def generate_animation_frame(blogger_id: int, payload: FrameGenerate, db: Sessio
             reference_image=payload.base_image
         )
         
+        print(f"[Frame Gen] Success! URL: {image_url[:80]}...")
+        
         return {
             "image_url": image_url,
             "prompt": payload.prompt
         }
     except Exception as e:
+        print(f"[Frame Gen] ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Frame generation failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Frame generation failed: {str(e)}")
