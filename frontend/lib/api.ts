@@ -92,6 +92,16 @@ export const api = {
     generateScript: (task_id: number) => request<{ ok: boolean; task_id: number; status: string }>(`/api/tasks/${task_id}/script`, { method: "POST" }),
     updateContent: (task_id: number, data: { idea?: string; script?: string }) => request(`/api/tasks/${task_id}/content`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (task_id: number) => request<{ ok: boolean }>(`/api/tasks/${task_id}`, { method: "DELETE" }),
+    // Stats
+    getStats: () => request<{
+      total_tasks: number;
+      tasks_this_week: number;
+      completion_rate: number;
+      status_distribution: Record<string, number>;
+      content_type_distribution: Record<string, number>;
+      tasks_over_time: Array<{ date: string; count: number }>;
+      tasks_by_blogger: Record<string, number>;
+    }>("/api/tasks/stats"),
     // Fashion generation endpoints
     updateFashionSetup: (task_id: number, data: { location_id?: number | null; location_description?: string | null; outfit?: Record<string, any> | null }) =>
       request<Task>(`/api/tasks/${task_id}/fashion/setup`, { method: "PATCH", body: JSON.stringify(data) }),

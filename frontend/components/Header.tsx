@@ -9,6 +9,7 @@ export function Header() {
         <a href="/" className="hover:text-white">Главная</a>
         <a href="/bloggers" className="hover:text-white">Блогеры</a>
         <a href="/calendar" className="hover:text-white">Календарь</a>
+        <a href="/dashboard" className="hover:text-white">📊 Dashboard</a>
       </nav>
     </header>
   );

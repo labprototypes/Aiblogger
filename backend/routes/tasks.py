@@ -353,3 +353,76 @@ Return updated prompt only.""")
         "frames": results,
         "task_id": task.id
     }
+
+
+@router.get("/stats")
+def get_task_stats(db: Session = Depends(get_db)):
+    """Get statistics about tasks for dashboard."""
+    from sqlalchemy import func
+    from datetime import datetime, timedelta
+    
+    # Total tasks
+    total_tasks = db.query(models.ContentTask).count()
+    
+    # Tasks by status
+    status_counts = db.query(
+        models.ContentTask.status,
+        func.count(models.ContentTask.id).label("count")
+    ).group_by(models.ContentTask.status).all()
+    
+    status_distribution = {status: count for status, count in status_counts}
+    
+    # Tasks by content type
+    type_counts = db.query(
+        models.ContentTask.content_type,
+        func.count(models.ContentTask.id).label("count")
+    ).group_by(models.ContentTask.content_type).all()
+    
+    content_type_distribution = {content_type: count for content_type, count in type_counts}
+    
+    # Tasks this week
+    today = datetime.now().date()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    
+    tasks_this_week = db.query(models.ContentTask).filter(
+        models.ContentTask.date >= week_start.isoformat(),
+        models.ContentTask.date <= week_end.isoformat()
+    ).count()
+    
+    # Completion rate (APPROVED + PUBLISHED / total)
+    completed_tasks = db.query(models.ContentTask).filter(
+        models.ContentTask.status.in_(["APPROVED", "PUBLISHED"])
+    ).count()
+    
+    completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+    
+    # Tasks over time (last 30 days)
+    thirty_days_ago = today - timedelta(days=30)
+    
+    daily_tasks = db.query(
+        models.ContentTask.date,
+        func.count(models.ContentTask.id).label("count")
+    ).filter(
+        models.ContentTask.date >= thirty_days_ago.isoformat()
+    ).group_by(models.ContentTask.date).order_by(models.ContentTask.date).all()
+    
+    tasks_over_time = [{"date": date, "count": count} for date, count in daily_tasks]
+    
+    # Tasks by blogger
+    blogger_counts = db.query(
+        models.Blogger.name,
+        func.count(models.ContentTask.id).label("count")
+    ).join(models.ContentTask).group_by(models.Blogger.name).all()
+    
+    tasks_by_blogger = {name: count for name, count in blogger_counts}
+    
+    return {
+        "total_tasks": total_tasks,
+        "tasks_this_week": tasks_this_week,
+        "completion_rate": round(completion_rate, 1),
+        "status_distribution": status_distribution,
+        "content_type_distribution": content_type_distribution,
+        "tasks_over_time": tasks_over_time,
+        "tasks_by_blogger": tasks_by_blogger
+    }
