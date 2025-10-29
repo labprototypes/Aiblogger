@@ -14,6 +14,7 @@ type Props = {
   onGenerate: (type: "main" | "additional") => Promise<void>;
   onRegenerate: (imageType: string, customPrompt?: string) => Promise<void>;
   onApprove: (imageType: string) => void;
+  onApproveAll: () => void;
   onEditPrompt: (imageType: string, newPrompt: string) => void;
 };
 
@@ -24,6 +25,7 @@ export default function FashionFrameGenerator({
   onGenerate,
   onRegenerate,
   onApprove,
+  onApproveAll,
   onEditPrompt,
 }: Props) {
   const [pending, startTransition] = useTransition();
@@ -169,7 +171,19 @@ export default function FashionFrameGenerator({
       {/* Step 2: Additional Frames */}
       {mainImage?.approved && (
         <div className="card p-6">
-          <h3 className="text-lg font-semibold mb-4">Шаг 2: Дополнительные ракурсы (3 кадра)</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Шаг 2: Дополнительные ракурсы (3 кадра)</h3>
+            
+            {additionalImages.length > 0 && !additionalImages.every(img => img.approved) && (
+              <button
+                onClick={onApproveAll}
+                disabled={pending}
+                className="pill bg-lime-400 hover:bg-lime-500 text-black disabled:opacity-50"
+              >
+                ✓ Подтвердить все
+              </button>
+            )}
+          </div>
 
           {additionalImages.length === 0 ? (
             <div className="text-center py-8">

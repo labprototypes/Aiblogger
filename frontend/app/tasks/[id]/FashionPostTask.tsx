@@ -125,6 +125,23 @@ export default function FashionPostTask({ task: initialTask, blogger }: { task: 
     }
   };
 
+  const handleApproveAll = async () => {
+    try {
+      // Approve all 3 angles at once
+      await Promise.all([
+        api.tasks.approveFrame(task.id, "angle1"),
+        api.tasks.approveFrame(task.id, "angle2"),
+        api.tasks.approveFrame(task.id, "angle3"),
+      ]);
+      
+      // Update all to approved
+      setAdditionalFrames(prev => prev.map(f => ({...f, approved: true})));
+    } catch (e) {
+      console.error("Bulk approve failed:", e);
+      alert("Ошибка подтверждения");
+    }
+  };
+
   const handleEditPrompt = (imageType: string, newPrompt: string) => {
     if (imageType === "main") {
       setMainFrame(prev => prev ? {...prev, prompt: newPrompt} : null);
@@ -220,6 +237,7 @@ export default function FashionPostTask({ task: initialTask, blogger }: { task: 
             onGenerate={handleGenerate}
             onRegenerate={handleRegenerate}
             onApprove={handleApprove}
+            onApproveAll={handleApproveAll}
             onEditPrompt={handleEditPrompt}
           />
         </div>

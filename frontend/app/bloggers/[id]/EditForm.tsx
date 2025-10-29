@@ -4,6 +4,8 @@ import { api } from "../../../lib/api";
 import ImageUpload from "../../../components/ImageUpload";
 import LocationsManager from "./LocationsManager";
 import OutfitsManager from "./OutfitsManager";
+import SaveIndicator from "../../../components/SaveIndicator";
+import { useAutoSave } from "../../../hooks/useAutoSave";
 
 export default function EditForm({ id }: { id: number }) {
   const [blogger, setBlogger] = useState<any>(null);
@@ -24,6 +26,11 @@ export default function EditForm({ id }: { id: number }) {
 
   const isPodcaster = type === "podcaster";
   const isFashion = type === "fashion";
+
+  // Auto-save setup
+  const [autoSave, saveStatus] = useAutoSave(async (data: any) => {
+    await api.bloggers.update(id, data);
+  }, 1500); // 1.5 second debounce
 
   useEffect(() => {
     let alive = true;
@@ -53,6 +60,32 @@ export default function EditForm({ id }: { id: number }) {
     };
   }, [id]);
 
+  // Auto-save effect - triggers on any field change
+  useEffect(() => {
+    if (loading || !blogger) return; // Don't save during initial load
+    
+    autoSave({
+      name: name.trim(),
+      type,
+      // @ts-ignore
+      image: avatarUrl || undefined,
+      // @ts-ignore
+      locations: locations.length > 0 ? locations : undefined,
+      // @ts-ignore
+      outfits: outfits.length > 0 ? outfits : undefined,
+      // @ts-ignore
+      theme: theme || undefined,
+      // @ts-ignore
+      tone_of_voice: tone || undefined,
+      // @ts-ignore
+      voice_id: voiceId || undefined,
+      // @ts-ignore
+      editing_types_enabled: editingTypesEnabled.length > 0 ? editingTypesEnabled : undefined,
+      // @ts-ignore
+      subtitles_enabled: subtitlesEnabled ? 1 : 0,
+    });
+  }, [name, type, avatarUrl, locations, outfits, theme, tone, voiceId, editingTypesEnabled, subtitlesEnabled]);
+
   const toggleEditingType = (et: string) => {
     if (editingTypesEnabled.includes(et)) {
       setEditingTypesEnabled(editingTypesEnabled.filter(t => t !== et));
@@ -63,34 +96,8 @@ export default function EditForm({ id }: { id: number }) {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    startTransition(async () => {
-      try {
-        await api.bloggers.update(id, {
-          name: name.trim(),
-          type,
-          // @ts-ignore
-          image: avatarUrl || undefined,
-          // @ts-ignore
-          locations: locations.length > 0 ? locations : undefined,
-          // @ts-ignore
-          outfits: outfits.length > 0 ? outfits : undefined,
-          // @ts-ignore
-          theme: theme || undefined,
-          // @ts-ignore
-          tone_of_voice: tone || undefined,
-          // @ts-ignore
-          voice_id: voiceId || undefined,
-          // @ts-ignore
-          editing_types_enabled: editingTypesEnabled.length > 0 ? editingTypesEnabled : undefined,
-          // @ts-ignore
-          subtitles_enabled: subtitlesEnabled ? 1 : 0,
-        });
-        window.location.href = "/bloggers";
-      } catch (e) {
-        setError("Сохранение не удалось");
-      }
-    });
+    // Auto-save handles saving, just redirect back
+    window.location.href = "/bloggers";
   };
 
   if (loading) return <div className="text-gray-400">Загрузка…</div>;
@@ -268,15 +275,19 @@ export default function EditForm({ id }: { id: number }) {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="btn btn-primary disabled:opacity-50"
-        >
-          {pending ? "Сохранение…" : "Сохранить изменения"}
-        </button>
-        <a href="/bloggers" className="btn">Отмена</a>
+      <div className="flex items-center justify-between">
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={pending || saveStatus === 'saving'}
+            className="btn btn-primary disabled:opacity-50"
+          >
+            {pending ? "Сохранение…" : "Вернуться к списку"}
+          </button>
+          <a href="/bloggers" className="btn">Назад</a>
+        </div>
+        
+        <SaveIndicator status={saveStatus as 'idle' | 'pending' | 'saving' | 'saved' | 'error'} />
       </div>
     </form>
   );

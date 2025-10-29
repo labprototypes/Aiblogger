@@ -9,6 +9,7 @@ from ..utils.queue import enqueue
 from ..workers.image_worker import process_image
 from ..workers.video_worker import process_video
 from ..workers.voice_worker import process_voice
+from ..workers.fashion_worker import process_fashion_post
 from ..utils.openai_chat import generate_text
 
 
@@ -84,14 +85,26 @@ def trigger_generation(task_id: int, db: Session = Depends(get_db)):
     task = db.query(models.ContentTask).get(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    # Pick worker based on content_type
+    
+    # Get blogger to check type
+    blogger = db.query(models.Blogger).get(task.blogger_id)
+    
+    # Pick worker based on blogger type and content_type
     ct = (task.content_type or "").lower()
-    if any(k in ct for k in ["video", "reel", "short"]):
+    
+    # Fashion blogger with post type → fashion worker
+    if blogger and blogger.type == "fashion" and ct == "post":
+        job_id = enqueue(process_fashion_post, task.id)
+    # Video content
+    elif any(k in ct for k in ["video", "reel", "short"]):
         job_id = enqueue(process_video, task.id)
+    # Voice/audio content
     elif any(k in ct for k in ["voice", "podcast", "audio"]):
         job_id = enqueue(process_voice, task.id, text=task.script or task.idea or "", voice_id=task.blogger.voice_id if hasattr(task.blogger, "voice_id") else None)
+    # Default: image
     else:
         job_id = enqueue(process_image, task.id)
+    
     task.status = "GENERATING"  # Worker will update to REVIEW when done
     db.commit()
     return {"queued": True, "task_id": task.id, "job_id": job_id}

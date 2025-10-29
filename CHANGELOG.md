@@ -171,8 +171,92 @@ AWS_REGION=us-east-1             # S3 region
 
 ### 🔜 Next Steps (Phase 4)
 
-- [ ] Integrate auto-save into EditForm
+- [x] Integrate auto-save into EditForm
+- [x] Fashion worker for background generation
+- [x] Bulk operations (approve all angles)
 - [ ] Integrate auto-save into FashionPostTask setup tab
-- [ ] Fashion worker for background generation
 - [ ] Unified create task wizard
 - [ ] Inline location/outfit creation
+
+## [2024-10-29] - Phase 4: Auto-Save & Fashion Worker
+
+### ✨ Added
+
+**1. Auto-Save in EditForm**
+- ✅ Integrated useAutoSave hook with 1.5s debounce
+- ✅ SaveIndicator shows real-time save status
+- ✅ Auto-saves on any field change (name, type, avatar, locations, outfits, theme, tone, voice, editing types, subtitles)
+- ✅ Submit button now just redirects (auto-save handles persistence)
+- ✅ Visual feedback: pending → saving → saved → idle
+
+**2. Fashion Background Worker**
+- ✅ Created `fashion_worker.py` for complete fashion post generation
+- ✅ Generates 1 main frame (9:16) + 3 angle variations (4:5) automatically
+- ✅ Uses main frame as reference for angles (Seedream edit mode)
+- ✅ Sets status to REVIEW when complete
+- ✅ Integrated into `/api/tasks/{id}/generate` route
+- ✅ Automatically selected for fashion bloggers with post content type
+
+**3. Bulk Approve for Angles**
+- ✅ "Подтвердить все" button in FashionFrameGenerator
+- ✅ Approves all 3 angle frames simultaneously
+- ✅ Parallel API calls for performance
+- ✅ Only shows when angles exist and not all approved
+
+### 🔄 Changed
+
+**4. Unified Generation Endpoint**
+- Updated `/api/tasks/{id}/generate` to route by blogger type:
+  - Fashion blogger + post → `fashion_worker`
+  - Video/reel/short → `video_worker`
+  - Voice/podcast/audio → `voice_worker`
+  - Default → `image_worker`
+
+**5. EditForm UX Improvements**
+- Removed manual "Save" button
+- Changed submit to "Вернуться к списку"
+- SaveIndicator in bottom-right corner
+- No more forgotten changes
+
+### 📝 Technical Details
+
+**New Files:**
+- `backend/workers/fashion_worker.py` (145 lines)
+
+**Modified Files:**
+- `frontend/app/bloggers/[id]/EditForm.tsx` - Auto-save integration
+- `frontend/app/tasks/[id]/FashionPostTask.tsx` - Bulk approve handler
+- `frontend/app/tasks/[id]/FashionFrameGenerator.tsx` - Approve all button
+- `backend/routes/tasks.py` - Fashion worker routing
+
+**Fashion Worker Workflow:**
+```
+1. Extract location + outfit from task
+2. Generate main frame prompt via GPT-4o-mini
+3. Generate main frame (9:16) via Seedream v4
+4. For each of 3 angles:
+   - Generate angle prompt variation
+   - Generate angle frame (4:5) using main as reference
+5. Set status to REVIEW
+```
+
+### 🎯 Impact
+
+**Before:**
+- Manual fashion frame generation (4 separate API calls)
+- No bulk operations
+- Manual save required in forms
+
+**After:**
+- ✅ One-click fashion post generation (background worker)
+- ✅ Bulk approve all angles at once
+- ✅ Auto-save everywhere (no forgotten changes)
+- ✅ Better UX with real-time feedback
+
+### 🔜 Next Steps (Phase 5)
+
+- [ ] Auto-save in FashionPostTask setup tab
+- [ ] Unified create task wizard
+- [ ] Inline location/outfit creation from task page
+- [ ] Dashboard with metrics
+- [ ] Calendar drag & drop
