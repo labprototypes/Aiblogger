@@ -21,12 +21,12 @@ type Blogger = {
   id: number;
   name: string;
   type: string;
-  theme?: string;
-  tone_of_voice?: string;
-  face_image?: string;
+  theme?: string | null;
+  tone_of_voice?: string | null;
+  face_image?: string | null;
   locations?: any[] | null;
   animation_frames?: any[] | null;
-  voice_id?: string;
+  voice_id?: string | null;
 };
 
 export default function PodcasterTask({ task: initialTask, blogger }: { task: Task; blogger: Blogger }) {
