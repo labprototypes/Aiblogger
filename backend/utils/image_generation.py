@@ -7,6 +7,12 @@ from typing import Optional
 from uuid import uuid4
 from openai import OpenAI
 
+# Configure FAL client globally
+FAL_API_KEY = os.getenv("FAL_API_KEY")
+if FAL_API_KEY:
+    os.environ["FAL_KEY"] = FAL_API_KEY
+    fal_client.api_key = FAL_API_KEY
+
 
 def enhance_prompt_with_gpt(user_prompt: str, mode: str = "location") -> str:
     """
@@ -94,13 +100,8 @@ def generate_fashion_frame(
     Returns:
         URL of the generated image
     """
-    FAL_API_KEY = os.getenv("FAL_API_KEY")
-    
     if not FAL_API_KEY:
         raise ValueError("FAL_API_KEY not set in environment")
-    
-    # Configure fal_client
-    os.environ["FAL_KEY"] = FAL_API_KEY
     
     # Map aspect ratios to dimensions
     dimensions = {
@@ -194,6 +195,7 @@ def generate_fashion_frame(
 def upload_fal_image_to_s3(fal_url: str, filename: str) -> str:
     """
     Download image from FAL.ai temporary URL and upload to S3 for persistence
+    Uses existing storage.py utilities for consistency
     
     Args:
         fal_url: Temporary FAL.ai image URL
@@ -202,38 +204,18 @@ def upload_fal_image_to_s3(fal_url: str, filename: str) -> str:
     Returns:
         Permanent S3 URL
     """
-    import boto3
     import requests
-    from io import BytesIO
-    
-    # Check if S3 is configured
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-    AWS_S3_BUCKET = os.getenv('AWS_S3_BUCKET')
-    AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
-    
-    if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET]):
-        raise Exception("S3 credentials not configured")
+    from ..utils.storage import upload_bytes_to_s3
     
     # Download from FAL
     response = requests.get(fal_url, timeout=30)
     response.raise_for_status()
     
-    # Upload to S3
-    s3 = boto3.client(
-        's3',
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        region_name=AWS_REGION
-    )
-    
-    s3.upload_fileobj(
-        BytesIO(response.content),
-        AWS_S3_BUCKET,
+    # Upload to S3 using storage utility (handles region correctly)
+    s3_url = upload_bytes_to_s3(
+        response.content, 
         f"fashion/{filename}",
-        ExtraArgs={'ContentType': 'image/jpeg', 'ACL': 'public-read'}
+        'image/jpeg'
     )
     
-    # Return public URL
-    s3_url = f"https://{AWS_S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/fashion/{filename}"
     return s3_url
